@@ -1,0 +1,7 @@
+{
+	"ringmod_sc": {
+		"name": "Ring Modulated Sidechain",
+		"description": "This plugin allows to apply a specific sidechaining technique based on ring modulation and subtraction of the original signal"
+	}
+}
+
