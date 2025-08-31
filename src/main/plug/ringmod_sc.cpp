@@ -384,7 +384,7 @@ namespace lsp
 //                    channel_t *c            = &vChannels[i];
 
                     // Just pass signal to output buffer
-                    dsp::copy(io->vOut, io->vIn, samples);
+                    dsp::copy(io->vOut, io->vIn, to_process);
                 }
 
                 // Update pointer
