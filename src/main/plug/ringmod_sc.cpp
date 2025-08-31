@@ -34,7 +34,7 @@ namespace lsp
     namespace plugins
     {
         // The size of temporary buffer for audio processing
-        static constexpr size_t BUFFER_SIZE     = 0x400;
+        static constexpr size_t BUFFER_SIZE     = 0x200;
 
         //---------------------------------------------------------------------
         // Plugin factory
@@ -265,10 +265,12 @@ namespace lsp
             update_premix();
         }
 
-        void ringmod_sc::premix_channels(io_buffers_t * io, size_t samples)
+        void ringmod_sc::premix_channels(io_buffers_t * io_buf, size_t samples)
         {
             for (size_t i=0; i<nChannels; ++i)
             {
+                io_buffers_t * const io = &io_buf[i];
+
                 // Get pointers to buffers and advance position
                 float * const in_buf    = sPremix.vIn[i];
                 float * const out_buf   = sPremix.vOut[i];
@@ -283,8 +285,7 @@ namespace lsp
                 // Update pointers
                 sPremix.vIn[i]    = &in_buf[samples];
                 sPremix.vOut[i]   = &out_buf[samples];
-                if (sc_buf != NULL)
-                    sPremix.vSc[i]    = &sc_buf[samples];
+                sPremix.vSc[i]    = &sc_buf[samples];
                 if (link_buf != NULL)
                     sPremix.vLink[i]  = &link_buf[samples];
 
@@ -350,7 +351,7 @@ namespace lsp
 
         void ringmod_sc::process(size_t samples)
         {
-            io_buffers_t io[2];
+            io_buffers_t io_buf[2];
 
             // Prepare audio channels
             for (size_t i=0; i<nChannels; ++i)
@@ -374,11 +375,12 @@ namespace lsp
                 const size_t to_process     = lsp_min(samples - offset, BUFFER_SIZE);
 
                 // Pre-mix channel data
-                premix_channels(io, to_process);
+                premix_channels(io_buf, to_process);
 
                 // Process each channel independently
                 for (size_t i=0; i<nChannels; ++i)
                 {
+                    io_buffers_t * const io = &io_buf[i];
 //                    channel_t *c            = &vChannels[i];
 
                     // Just pass signal to output buffer
