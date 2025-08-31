@@ -41,26 +41,65 @@ namespace lsp
         //-------------------------------------------------------------------------
         // Plugin metadata
 
-        // NOTE: Port identifiers should not be longer than 7 characters as it will overflow VST2 parameter name buffers
+    #define RMOD_PREMIX \
+        SWITCH("showpmx", "Show pre-mix overlay", "Show premix bar", 0.0f), \
+        AMP_GAIN10("in2lk", "Input to Link mix", "In to Link mix", GAIN_AMP_M_INF_DB), \
+        AMP_GAIN10("lk2in", "Link to Input mix", "Link to In mix", GAIN_AMP_M_INF_DB), \
+        AMP_GAIN10("lk2sc", "Link to Sidechain mix", "Link to SC mix", GAIN_AMP_M_INF_DB), \
+        AMP_GAIN10("in2sc", "Input to Sidechain mix", "In to SC mix", GAIN_AMP_M_INF_DB), \
+        AMP_GAIN10("sc2in", "Sidechain to Input mix", "SC to In mix", GAIN_AMP_M_INF_DB), \
+        AMP_GAIN10("sc2lk", "Sidechain to Link mix", "SC to Link mix", GAIN_AMP_M_INF_DB)
+
+    #define RMOD_SHM_LINK_MONO \
+        OPT_RETURN_MONO("link", "shml", "Side-chain shared memory link")
+
+    #define RMOD_SHM_LINK_STEREO \
+        OPT_RETURN_STEREO("link", "shml_", "Side-chain shared memory link")
+
         static const port_t ringmod_sc_mono_ports[] =
         {
-            // Input and output audio ports
             PORTS_MONO_PLUGIN,
+            PORTS_MONO_SIDECHAIN,
+            RMOD_SHM_LINK_MONO,
+            RMOD_PREMIX,
 
-            // Input controls
             BYPASS,
+            IN_GAIN,
+            OUT_GAIN,
+
+            CONTROL("hold", "Hold time", "Hold", U_MSEC, ringmod_sc::HOLD),
+            CONTROL("release", "Release time", "Release", U_MSEC, ringmod_sc::RELEASE),
+            CONTROL("lahead", "Lookahead time", "Lookahead", U_MSEC, ringmod_sc::RELEASE),
+            CONTROL("duck", "Ducking time", "Duck", U_MSEC, ringmod_sc::RELEASE),
+            CONTROL("amount", "Amount", "Amount", U_DB, ringmod_sc::AMOUNT),
+
+            AMP_GAIN10("dry", "Dry gain", "Dry", GAIN_AMP_M_INF_DB),
+            AMP_GAIN10("wet", "Wet gain", "Wet", GAIN_AMP_0_DB),
+            PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),
 
             PORTS_END
         };
 
-        // NOTE: Port identifiers should not be longer than 7 characters as it will overflow VST2 parameter name buffers
         static const port_t ringmod_sc_stereo_ports[] =
         {
-            // Input and output audio ports
             PORTS_STEREO_PLUGIN,
+            PORTS_STEREO_SIDECHAIN,
+            RMOD_SHM_LINK_STEREO,
+            RMOD_PREMIX,
 
-            // Input controls
             BYPASS,
+            IN_GAIN,
+            OUT_GAIN,
+
+            CONTROL("hold", "Hold time", "Hold", U_MSEC, ringmod_sc::HOLD),
+            CONTROL("release", "Release time", "Release", U_MSEC, ringmod_sc::RELEASE),
+            CONTROL("lahead", "Lookahead time", "Lookahead", U_MSEC, ringmod_sc::RELEASE),
+            CONTROL("duck", "Ducking time", "Duck", U_MSEC, ringmod_sc::RELEASE),
+            CONTROL("amount", "Amount", "Amount", U_DB, ringmod_sc::AMOUNT),
+
+            AMP_GAIN10("dry", "Dry gain", "Dry", GAIN_AMP_M_INF_DB),
+            AMP_GAIN10("wet", "Wet gain", "Wet", GAIN_AMP_0_DB),
+            PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),
 
             PORTS_END
         };
@@ -104,7 +143,7 @@ namespace lsp
             ringmod_sc_mono_ports,
             "util/ringmod_sc.xml",
             NULL,
-            mono_plugin_port_groups,
+            mono_plugin_sidechain_port_groups,
             &ringmod_sc_bundle
         };
 
@@ -134,7 +173,7 @@ namespace lsp
             ringmod_sc_stereo_ports,
             "util/ringmod_sc.xml",
             NULL,
-            stereo_plugin_port_groups,
+            stereo_plugin_sidechain_port_groups,
             &ringmod_sc_bundle
         };
     } /* namespace meta */

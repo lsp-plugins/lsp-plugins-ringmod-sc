@@ -33,17 +33,30 @@ namespace lsp
     {
         typedef struct ringmod_sc
         {
-            static constexpr float  SAMPLES_MIN         = 0.0f;
-            static constexpr float  SAMPLES_MAX         = 10000.0f;
-            static constexpr float  SAMPLES_DFL         = 0.0f;
-            static constexpr float  SAMPLES_STEP        = 1.0f;
+            static constexpr float  HOLD_MIN            = 0.0f;
+            static constexpr float  HOLD_MAX            = 5.0f;
+            static constexpr float  HOLD_DFL            = 0.0f;
+            static constexpr float  HOLD_STEP           = 0.01f;
 
-            static constexpr float  TIME_MIN            = 0.0f;
-            static constexpr float  TIME_MAX            = 1000.0f;
-            static constexpr float  TIME_DFL            = 0.0f;
-            static constexpr float  TIME_STEP           = 0.01f;
+            static constexpr float  RELEASE_MIN         = 0.0f;
+            static constexpr float  RELEASE_MAX         = 100.0f;
+            static constexpr float  RELEASE_DFL         = 0.0f;
+            static constexpr float  RELEASE_STEP        = 0.01f;
 
-            static constexpr float  DELAY_OUT_MAX_TIME  = 10000.0f;
+            static constexpr float  LOOKAHEAD_MIN       = 0.0f;
+            static constexpr float  LOOKAHEAD_MAX       = 5.0f;
+            static constexpr float  LOOKAHEAD_DFL       = 0.0f;
+            static constexpr float  LOOKAHEAD_STEP      = 0.01f;
+
+            static constexpr float  DUCK_MIN            = 0.0f;
+            static constexpr float  DUCK_MAX            = 5.0f;
+            static constexpr float  DUCK_DFL            = 0.0f;
+            static constexpr float  DUCK_STEP           = 0.01f;
+
+            static constexpr float  AMOUNT_MIN          = -12.0f;
+            static constexpr float  AMOUNT_MAX          = 0.0f;
+            static constexpr float  AMOUNT_DFL          = 0.0f;
+            static constexpr float  AMOUNT_STEP         = 0.1f;
         } ringmod_sc;
 
         // Plugin type metadata

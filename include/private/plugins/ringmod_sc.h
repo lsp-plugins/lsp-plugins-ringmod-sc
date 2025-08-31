@@ -44,27 +44,80 @@ namespace lsp
                     CD_X2_STEREO
                 };
 
+                typedef struct io_buffers_t
+                {
+                    float              *vIn;
+                    float              *vOut;
+                    float              *vScIn;
+                    float              *vShmIn;
+                } io_buffers_t;
+
+                typedef struct premix_t
+                {
+                    float               fInToSc;                // Input -> Sidechain mix
+                    float               fInToLink;              // Input -> Link mix
+                    float               fLinkToIn;              // Link -> Input mix
+                    float               fLinkToSc;              // Link -> Sidechain mix
+                    float               fScToIn;                // Sidechain -> Input mix
+                    float               fScToLink;              // Sidechain -> Link mix
+
+                    float              *vIn[2];                 // Input buffer
+                    float              *vOut[2];                // Output buffer
+                    float              *vSc[2];                 // Sidechain buffer
+                    float              *vLink[2];               // Link buffer
+
+                    float              *vTmpIn[2];              // Replacement buffer for input
+                    float              *vTmpLink[2];            // Replacement buffer for link
+                    float              *vTmpSc[2];              // Replacement buffer for sidechain
+
+                    plug::IPort        *pInToSc;                // Input -> Sidechain mix
+                    plug::IPort        *pInToLink;              // Input -> Link mix
+                    plug::IPort        *pLinkToIn;              // Link -> Input mix
+                    plug::IPort        *pLinkToSc;              // Link -> Sidechain mix
+                    plug::IPort        *pScToIn;                // Sidechain -> Input mix
+                    plug::IPort        *pScToLink;              // Sidechain -> Link mix
+                } premix_t;
+
                 typedef struct channel_t
                 {
                     // DSP processing modules
-                    dspu::Bypass        sBypass;            // Bypass
+                    dspu::Bypass        sBypass;                // Bypass
+
+                    float              *vIn;                    // Input data
+                    float              *vOut;                   // Output data
+                    float              *vSc;                    // Sidechain data
 
                     // Ports
-                    plug::IPort        *pIn;                // Input port
-                    plug::IPort        *pOut;               // Output port
+                    plug::IPort        *pIn;                    // Input port
+                    plug::IPort        *pOut;                   // Output port
+                    plug::IPort        *pScIn;                  // Sidechain input port
+                    plug::IPort        *pShmIn;                 // Shared memory link input port
                 } channel_t;
 
             protected:
-                uint32_t            nChannels;          // Number of channels
-                channel_t          *vChannels;          // Processing channels
-                float              *vBuffer;            // Temporary buffer for audio processing
+                uint32_t            nChannels;              // Number of channels
+                channel_t          *vChannels;              // Processing channels
+                float              *vBuffer;                // Temporary buffer for audio processing
+                premix_t            sPremix;                // Sidechain pre-mix
 
-                plug::IPort        *pBypass;            // Bypass
+                plug::IPort        *pBypass;                // Bypass
+                plug::IPort        *pGainIn;                // Input gain
+                plug::IPort        *pGainOut;               // Output gain
+                plug::IPort        *pHold;                  // Hold time
+                plug::IPort        *pRelease;               // Release time
+                plug::IPort        *pLookahead;             // Lookahead time
+                plug::IPort        *pDuck;                  // Duck time
+                plug::IPort        *pAmount;                // Amount
+                plug::IPort        *pDry;                   // Dry gain
+                plug::IPort        *pWet;                   // Wet gain
+                plug::IPort        *pDryWet;                // Dry/Wet balance
 
-                uint8_t            *pData;              // Allocated data
+                uint8_t            *pData;                  // Allocated data
 
             protected:
                 void                do_destroy();
+                void                update_premix();
+                void                premix_channels(io_buffers_t * io, size_t samples);
 
             public:
                 explicit ringmod_sc(const meta::plugin_t *meta);
