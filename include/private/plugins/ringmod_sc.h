@@ -22,8 +22,9 @@
 #ifndef PRIVATE_PLUGINS_RINGMOD_SC_H_
 #define PRIVATE_PLUGINS_RINGMOD_SC_H_
 
-#include <lsp-plug.in/dsp-units/util/Delay.h>
 #include <lsp-plug.in/dsp-units/ctl/Bypass.h>
+#include <lsp-plug.in/dsp-units/util/Delay.h>
+#include <lsp-plug.in/dsp-units/util/RingBuffer.h>
 #include <lsp-plug.in/plug-fw/plug.h>
 #include <private/meta/ringmod_sc.h>
 
@@ -37,11 +38,25 @@ namespace lsp
         class ringmod_sc: public plug::Module
         {
             protected:
-                enum mode_t
+                enum sc_type_t
                 {
-                    CD_MONO,
-                    CD_STEREO,
-                    CD_X2_STEREO
+                    SC_TYPE_INTERNAL,
+                    SC_TYPE_EXTERNAL,
+                    SC_TYPE_SHM_LINK,
+                };
+
+                enum sc_source_t
+                {
+                    SC_SRC_LEFT_RIGHT,
+                    SC_SRC_RIGHT_LEFT,
+                    SC_SRC_LEFT,
+                    SC_SRC_RIGHT,
+                    SC_SRC_MID_SIDE,
+                    SC_SRC_SIDE_MID,
+                    SC_SRC_MIDDLE,
+                    SC_SRC_SIDE,
+                    SC_SRC_MIN,
+                    SC_SRC_MAX
                 };
 
                 typedef struct io_buffers_t
@@ -82,10 +97,12 @@ namespace lsp
                 {
                     // DSP processing modules
                     dspu::Bypass        sBypass;                // Bypass
+                    dspu::Delay         sInDelay;               // Input signal delay
+                    dspu::RingBuffer    sScDelay;               // Sidechain delay buffer
 
-                    float              *vIn;                    // Input data
-                    float              *vOut;                   // Output data
-                    float              *vSc;                    // Sidechain data
+                    float               fPeak;                  // Current sidechain peak value
+                    uint32_t            nHold;                  // Hold counter
+                    float              *vBuffer;                // Temporary data
 
                     // Ports
                     plug::IPort        *pIn;                    // Input port
@@ -98,11 +115,22 @@ namespace lsp
                 uint32_t            nChannels;              // Number of channels
                 channel_t          *vChannels;              // Processing channels
                 float              *vBuffer;                // Temporary buffer for audio processing
+                float              *vEmptyBuffer;           // Empty buffer for audio processing
                 premix_t            sPremix;                // Sidechain pre-mix
+                uint32_t            nType;                  // Sidechain type
+                uint32_t            nSource;                // Sidechain source
+                uint32_t            nLookahead;             // Lookahead
+                uint32_t            nDuck;                  // Ducking
+                uint32_t            nHold;                  // Hold signal
+                float               fTauRelease;            // Release time constant
+                float               fStereoLink;            // Stereo linking
 
                 plug::IPort        *pBypass;                // Bypass
                 plug::IPort        *pGainIn;                // Input gain
                 plug::IPort        *pGainOut;               // Output gain
+                plug::IPort        *pType;                  // Sidechain type
+                plug::IPort        *pSource;                // Sidechain source
+                plug::IPort        *pStereoLink;            // Stereo linking
                 plug::IPort        *pHold;                  // Hold time
                 plug::IPort        *pRelease;               // Release time
                 plug::IPort        *pLookahead;             // Lookahead time
@@ -118,6 +146,11 @@ namespace lsp
                 void                do_destroy();
                 void                update_premix();
                 void                premix_channels(io_buffers_t * io, size_t samples);
+                void                process_sidechain_type(float **sc, io_buffers_t * io, size_t samples);
+                void                process_sidechain_envelope(float **sc, size_t samples);
+                void                process_sidechain_delays(float **sc, size_t samples);
+                void                process_sidechain_stereo_link(float **sc, size_t samples);
+                void                process_sidechain_signal(io_buffers_t * io, size_t samples);
 
             public:
                 explicit ringmod_sc(const meta::plugin_t *meta);

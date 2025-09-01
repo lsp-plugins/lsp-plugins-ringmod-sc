@@ -41,6 +41,29 @@ namespace lsp
         //-------------------------------------------------------------------------
         // Plugin metadata
 
+        static const port_item_t ringmod_sc_types[] =
+        {
+            { "Internal",       "sidechain.internal" },
+            { "External",       "sidechain.external" },
+            { "Link",           "sidechain.link" },
+            { NULL, NULL }
+        };
+
+        static const port_item_t ringmod_sc_sources[] =
+        {
+            { "Left/Right",     "sidechain.left_right"      },
+            { "Right/Left",     "sidechain.right_left"      },
+            { "Left",           "sidechain.left"            },
+            { "Right",          "sidechain.right"           },
+            { "Mid/Side",       "sidechain.mid_side"        },
+            { "Side/Mid",       "sidechain.side_mid"        },
+            { "Middle",         "sidechain.middle"          },
+            { "Side",           "sidechain.side"            },
+            { "Min",            "sidechain.min"             },
+            { "Max",            "sidechain.max"             },
+            { NULL, NULL }
+        };
+
     #define RMOD_PREMIX \
         SWITCH("showpmx", "Show pre-mix overlay", "Show premix bar", 0.0f), \
         AMP_GAIN10("in2lk", "Input to Link mix", "In to Link mix", GAIN_AMP_M_INF_DB), \
@@ -67,6 +90,7 @@ namespace lsp
             IN_GAIN,
             OUT_GAIN,
 
+            COMBO("type", "Sidechain type", "Type", 1, ringmod_sc_types),
             CONTROL("hold", "Hold time", "Hold", U_MSEC, ringmod_sc::HOLD),
             CONTROL("release", "Release time", "Release", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("lahead", "Lookahead time", "Lookahead", U_MSEC, ringmod_sc::RELEASE),
@@ -91,6 +115,9 @@ namespace lsp
             IN_GAIN,
             OUT_GAIN,
 
+            COMBO("type", "Sidechain type", "Type", 1, ringmod_sc_types),
+            COMBO("source", "Sidechain source", "Source", 0, ringmod_sc_sources),
+            PERCENTS("slink", "Stereo link", "Stereo link", 0.0f, 0.1f),
             CONTROL("hold", "Hold time", "Hold", U_MSEC, ringmod_sc::HOLD),
             CONTROL("release", "Release time", "Release", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("lahead", "Lookahead time", "Lookahead", U_MSEC, ringmod_sc::RELEASE),
