@@ -79,6 +79,12 @@ namespace lsp
     #define RMOD_SHM_LINK_STEREO \
         OPT_RETURN_STEREO("link", "shml_", "Side-chain shared memory link")
 
+    #define RMOD_METERS(id, name) \
+        METER_OUT_GAIN("ilm", "Input level meter", GAIN_AMP_P_60_DB), \
+        METER_OUT_GAIN("slm" id, "Sidechain level meter" name, GAIN_AMP_P_60_DB), \
+        METER_GAIN_DFL("grm" id, "Gain reduction level meter" name, GAIN_AMP_0_DB, GAIN_AMP_0_DB), \
+        METER_OUT_GAIN("olm" id, "Output level meter" name, GAIN_AMP_P_60_DB)
+
         static const port_t ringmod_sc_mono_ports[] =
         {
             PORTS_MONO_PLUGIN,
@@ -97,10 +103,14 @@ namespace lsp
             CONTROL("duck", "Ducking time", "Duck", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("amount", "Amount", "Amount", U_DB, ringmod_sc::AMOUNT),
 
-            SWITCH("showmx", "Show mix overlay", "Show mix bar", 0.0f), \
+            SWITCH("showmx", "Show mix overlay", "Show mix bar", 0.0f),
             AMP_GAIN10("dry", "Dry gain", "Dry", GAIN_AMP_M_INF_DB),
             AMP_GAIN10("wet", "Wet gain", "Wet", GAIN_AMP_0_DB),
             PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),
+
+            // Meters
+            RMOD_METERS("", ""),
+            MESH("mg", "Meter graphs", 1 + 1*4, ringmod_sc::TIME_MESH_SIZE + 4),
 
             PORTS_END
         };
@@ -125,10 +135,15 @@ namespace lsp
             CONTROL("duck", "Ducking time", "Duck", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("amount", "Amount", "Amount", U_DB, ringmod_sc::AMOUNT),
 
-            SWITCH("showmx", "Show mix overlay", "Show mix bar", 0.0f), \
+            SWITCH("showmx", "Show mix overlay", "Show mix bar", 0.0f),
             AMP_GAIN10("dry", "Dry gain", "Dry", GAIN_AMP_M_INF_DB),
             AMP_GAIN10("wet", "Wet gain", "Wet", GAIN_AMP_0_DB),
             PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),
+
+            // Meters
+            RMOD_METERS("_l", " Left"),
+            RMOD_METERS("_r", " Right"),
+            MESH("mg", "Meter graphs", 1 + 2*4, ringmod_sc::TIME_MESH_SIZE + 4),
 
             PORTS_END
         };

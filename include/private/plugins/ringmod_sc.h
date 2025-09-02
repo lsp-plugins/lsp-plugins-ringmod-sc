@@ -24,6 +24,7 @@
 
 #include <lsp-plug.in/dsp-units/ctl/Bypass.h>
 #include <lsp-plug.in/dsp-units/util/Delay.h>
+#include <lsp-plug.in/dsp-units/util/MeterGraph.h>
 #include <lsp-plug.in/dsp-units/util/RingBuffer.h>
 #include <lsp-plug.in/plug-fw/plug.h>
 #include <private/meta/ringmod_sc.h>
@@ -57,6 +58,16 @@ namespace lsp
                     SC_SRC_SIDE,
                     SC_SRC_MIN,
                     SC_SRC_MAX
+                };
+
+                enum meter_graph_t
+                {
+                    MG_IN,
+                    MG_SC,
+                    MG_GAIN,
+                    MG_OUT,
+
+                    MG_TOTAL
                 };
 
                 typedef struct io_buffers_t
@@ -99,9 +110,11 @@ namespace lsp
                     dspu::Bypass        sBypass;                // Bypass
                     dspu::Delay         sInDelay;               // Input signal delay
                     dspu::RingBuffer    sScDelay;               // Sidechain delay buffer
+                    dspu::MeterGraph    vGraph[MG_TOTAL];       // Meter graphs
 
                     float               fPeak;                  // Current sidechain peak value
                     uint32_t            nHold;                  // Hold counter
+                    float               vValues[MG_TOTAL];      // Meter values
                     float              *vInData;                // Input signal data
                     float              *vBuffer;                // Temporary data
 
@@ -110,13 +123,15 @@ namespace lsp
                     plug::IPort        *pOut;                   // Output port
                     plug::IPort        *pScIn;                  // Sidechain input port
                     plug::IPort        *pShmIn;                 // Shared memory link input port
+                    plug::IPort        *vMeters[MG_TOTAL];      // Meters
                 } channel_t;
 
             protected:
                 uint32_t            nChannels;              // Number of channels
                 channel_t          *vChannels;              // Processing channels
-                float              *vBuffer;                // Temporary buffer for audio processing
                 float              *vEmptyBuffer;           // Empty buffer for audio processing
+                float              *vTime;                  // Mesh time points
+                float              *vBuffer;                // Temporary buffer for audio processing
                 premix_t            sPremix;                // Sidechain pre-mix
                 uint32_t            nType;                  // Sidechain type
                 uint32_t            nSource;                // Sidechain source
@@ -144,6 +159,7 @@ namespace lsp
                 plug::IPort        *pDry;                   // Dry gain
                 plug::IPort        *pWet;                   // Wet gain
                 plug::IPort        *pDryWet;                // Dry/Wet balance
+                plug::IPort        *pGraphMesh;             // Meter graph mesh
 
                 uint8_t            *pData;                  // Allocated data
 
@@ -157,6 +173,8 @@ namespace lsp
                 void                process_sidechain_stereo_link(float **sc, size_t samples);
                 void                process_sidechain_signal(io_buffers_t *io, size_t samples);
                 void                apply_sidechain_signal(io_buffers_t *io, size_t samples);
+                void                output_meters();
+                void                output_meshes();
 
             public:
                 explicit ringmod_sc(const meta::plugin_t *meta);

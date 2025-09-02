@@ -57,6 +57,9 @@ namespace lsp
             static constexpr float  AMOUNT_MAX          = 0.0f;
             static constexpr float  AMOUNT_DFL          = 0.0f;
             static constexpr float  AMOUNT_STEP         = 0.1f;
+
+            static constexpr size_t TIME_MESH_SIZE      = 640;
+            static constexpr float  TIME_HISTORY_MAX    = 5.0f;
         } ringmod_sc;
 
         // Plugin type metadata

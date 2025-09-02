@@ -64,6 +64,7 @@ namespace lsp
             // Initialize other parameters
             vChannels           = NULL;
             vEmptyBuffer        = NULL;
+            vTime               = NULL;
             vBuffer             = NULL;
 
             sPremix.fInToSc     = GAIN_AMP_M_INF_DB;
@@ -120,6 +121,8 @@ namespace lsp
             pWet                = NULL;
             pDryWet             = NULL;
 
+            pGraphMesh          = NULL;
+
             pData               = NULL;
         }
 
@@ -136,9 +139,11 @@ namespace lsp
             // Estimate the number of bytes to allocate
             size_t szof_channels    = align_size(sizeof(channel_t) * nChannels, OPTIMAL_ALIGN);
             size_t buf_sz           = BUFFER_SIZE * sizeof(float);
+            size_t history_sz       = meta::ringmod_sc::TIME_MESH_SIZE * sizeof(float);
             size_t alloc            = szof_channels +
                                       buf_sz +  // vEmptyBuffer
                                       buf_sz +  // vBuffer
+                                      history_sz + // vTime
                                       nChannels * ( // channel_t
                                           buf_sz +  // vIndata
                                           buf_sz    // vBuffer
@@ -153,6 +158,7 @@ namespace lsp
             // Initialize pointers to channels and temporary buffer
             vChannels               = advance_ptr_bytes<channel_t>(ptr, szof_channels);
             vEmptyBuffer            = advance_ptr_bytes<float>(ptr, buf_sz);
+            vTime                   = advance_ptr_bytes<float>(ptr, history_sz);
             vBuffer                 = advance_ptr_bytes<float>(ptr, buf_sz);
 
             // Initialize pre-mix
@@ -172,8 +178,18 @@ namespace lsp
                 c->sInDelay.construct();
                 c->sScDelay.construct();
 
+                for (size_t j=0; j<MG_TOTAL; ++j)
+                    c->vGraph[j].construct();
+                c->vGraph[MG_IN].set_method(dspu::MM_ABS_MAXIMUM);
+                c->vGraph[MG_SC].set_method(dspu::MM_ABS_MAXIMUM);
+                c->vGraph[MG_GAIN].set_method(dspu::MM_ABS_MINIMUM);
+                c->vGraph[MG_OUT].set_method(dspu::MM_ABS_MAXIMUM);
+
                 c->fPeak                = 0.0f;
                 c->nHold                = 0;
+                for (size_t j=0; j<MG_TOTAL; ++j)
+                    c->vValues[j]          = GAIN_AMP_M_INF_DB;
+
                 c->vInData              = advance_ptr_bytes<float>(ptr, buf_sz);
                 c->vBuffer              = advance_ptr_bytes<float>(ptr, buf_sz);
 
@@ -182,6 +198,9 @@ namespace lsp
                 c->pOut                 = NULL;
                 c->pScIn                = NULL;
                 c->pShmIn               = NULL;
+
+                for (size_t j=0; j<MG_TOTAL; ++j)
+                    c->vMeters[j]           = NULL;
             }
 
             // Bind ports
@@ -236,8 +255,20 @@ namespace lsp
             BIND_PORT(pWet);
             BIND_PORT(pDryWet);
 
+            // Bind meters
+            lsp_trace("Binding meters");
+            for (size_t i=0; i<nChannels; ++i)
+                for (size_t j=0; j<MG_TOTAL; ++j)
+                    BIND_PORT(vChannels[i].vMeters[j]);
+
+            BIND_PORT(pGraphMesh);
+
             // Initialize buffers
             dsp::fill_zero(vEmptyBuffer, BUFFER_SIZE);
+
+            float delta = meta::ringmod_sc::TIME_HISTORY_MAX / (meta::ringmod_sc::TIME_MESH_SIZE - 1);
+            for (size_t i=0; i<meta::ringmod_sc::TIME_MESH_SIZE; ++i)
+                vTime[i]    = meta::ringmod_sc::TIME_HISTORY_MAX - i*delta;
         }
 
         void ringmod_sc::destroy()
@@ -258,6 +289,9 @@ namespace lsp
                     c->sBypass.destroy();
                     c->sInDelay.destroy();
                     c->sScDelay.destroy();
+
+                    for (size_t j=0; j<MG_TOTAL; ++j)
+                        c->vGraph[j].destroy();
                 }
                 vChannels   = NULL;
             }
@@ -274,6 +308,7 @@ namespace lsp
 
         void ringmod_sc::update_sample_rate(long sr)
         {
+            const size_t samples_per_dot    = dspu::seconds_to_samples(sr, meta::ringmod_sc::TIME_HISTORY_MAX / meta::ringmod_sc::TIME_MESH_SIZE);
             const size_t in_max_delay = dspu::millis_to_samples(sr, meta::ringmod_sc::LOOKAHEAD_MAX);
             const size_t sc_max_delay =
                 in_max_delay +
@@ -287,6 +322,9 @@ namespace lsp
                 c->sBypass.init(sr);
                 c->sInDelay.init(in_max_delay + BUFFER_SIZE);
                 c->sScDelay.init(sc_max_delay + BUFFER_SIZE);
+
+                for (size_t j=0; j<MG_TOTAL; ++j)
+                    c->vGraph[j].set_period(samples_per_dot);
             }
         }
 
@@ -614,13 +652,79 @@ namespace lsp
 
                 // Apply lookahead delay
                 c->sInDelay.process(c->vInData, io->vIn, fInGain, samples);
+                c->vGraph[MG_IN].process(c->vInData, samples);
+                c->vValues[MG_IN]   = lsp_max(c->vValues[MG_IN], dsp::abs_max(c->vInData, samples));
+                c->vGraph[MG_SC].process(c->vBuffer, samples);
+                c->vValues[MG_SC]   = lsp_max(c->vValues[MG_SC], dsp::abs_max(c->vBuffer, samples));
 
                 // Modulate the signal with the sidechain and subtract from original signal
-                dsp::mul2(c->vBuffer, c->vInData, samples);
-                dsp::fmsub_k4(vBuffer, c->vInData, c->vBuffer, fAmount, samples);
+                dsp::mul2(c->vBuffer, c->vInData, samples);                         // c->vBuffer = ring-modulated data
+                dsp::fmsub_k4(vBuffer, c->vInData, c->vBuffer, fAmount, samples);   // vBuffer    = processed signal
+
+                for (size_t j=0; j<samples; ++j)
+                    c->vBuffer[j]       = lsp_max(0.0f, GAIN_AMP_0_DB - c->vBuffer[j] * fAmount); // c->vBuffer = gain reduction
+                c->vGraph[MG_GAIN].process(c->vBuffer, samples);
+                c->vValues[MG_GAIN] = lsp_min(c->vValues[MG_GAIN], dsp::abs_min(c->vBuffer, samples));
+
+                // Apply Dry/wet balance
+                dsp::mix2(vBuffer, c->vInData, fWet, fDry, samples);
+
+                c->vGraph[MG_OUT].process(c->vBuffer, samples);
+                c->vValues[MG_OUT]  = lsp_max(c->vValues[MG_OUT], dsp::abs_max(vBuffer, samples));
 
                 // Apply bypass
-                c->sBypass.process_drywet(io->vOut, vBuffer, c->vInData, fDry, fWet, samples);
+                c->sBypass.process(io->vOut, c->vInData, vBuffer, samples);
+            }
+        }
+
+        void ringmod_sc::output_meters()
+        {
+            for (size_t i=0; i<nChannels; ++i)
+            {
+                channel_t * const c     = &vChannels[i];
+                for (size_t j=0; j<MG_TOTAL; ++j)
+                    c->vMeters[j]->set_value(c->vValues[j]);
+            }
+        }
+
+        void ringmod_sc::output_meshes()
+        {
+            plug::mesh_t *mesh = (pGraphMesh != NULL) ? pGraphMesh->buffer<plug::mesh_t>() : NULL;
+            if ((mesh != NULL) && (!mesh->isEmpty()))
+            {
+                size_t index    = 0;
+                float *v        = mesh->pvData[index++];
+
+                // Time
+                dsp::copy(&v[2], vTime, meta::ringmod_sc::TIME_MESH_SIZE);
+                v[0]            = v[2] + 0.5f;
+                v[1]            = v[0];
+                v              += meta::ringmod_sc::TIME_MESH_SIZE + 2;
+                v[0]            = v[-1] - 0.5f;
+                v[1]            = v[-1];
+
+                // Channels
+                for (size_t i=0; i<nChannels; ++i)
+                {
+                    channel_t * const c     = &vChannels[i];
+
+                    for (size_t j=0; j<MG_TOTAL; ++j)
+                    {
+                        const float g   = (j == MG_GAIN) ? GAIN_AMP_0_DB : GAIN_AMP_M_INF_DB;
+
+                        v               = mesh->pvData[index++];
+                        dsp::copy(&v[2], c->vGraph[j].data(), meta::ringmod_sc::TIME_MESH_SIZE);
+
+                        v[0]            = g;
+                        v[1]            = v[2];
+                        v              += meta::ringmod_sc::TIME_MESH_SIZE + 2;
+                        v[0]            = v[-1];
+                        v[1]            = g;
+                    }
+                }
+
+                // Update mesh state
+                mesh->data(index, meta::ringmod_sc::TIME_MESH_SIZE + 4);
             }
         }
 
@@ -642,6 +746,12 @@ namespace lsp
                 core::AudioBuffer *buf = (c->pShmIn != NULL) ? c->pShmIn->buffer<core::AudioBuffer>() : NULL;
                 if ((buf != NULL) && (buf->active()))
                     sPremix.vLink[i]    = buf->buffer();
+
+                // Initialize meters
+                c->vValues[MG_IN]   = GAIN_AMP_M_INF_DB;
+                c->vValues[MG_SC]   = GAIN_AMP_M_INF_DB;
+                c->vValues[MG_GAIN] = GAIN_AMP_0_DB;
+                c->vValues[MG_OUT]  = GAIN_AMP_M_INF_DB;
             }
 
             // Process data
@@ -657,6 +767,10 @@ namespace lsp
                 // Update pointer
                 offset             += to_process;
             }
+
+            // Output meters and meshes
+            output_meters();
+            output_meshes();
         }
 
         void ringmod_sc::dump(dspu::IStateDumper *v) const
