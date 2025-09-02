@@ -80,7 +80,7 @@ namespace lsp
         OPT_RETURN_STEREO("link", "shml_", "Side-chain shared memory link")
 
     #define RMOD_METERS(id, name) \
-        METER_OUT_GAIN("ilm", "Input level meter", GAIN_AMP_P_60_DB), \
+        METER_OUT_GAIN("ilm" id, "Input level meter" name, GAIN_AMP_P_60_DB), \
         METER_OUT_GAIN("slm" id, "Sidechain level meter" name, GAIN_AMP_P_60_DB), \
         METER_GAIN_DFL("grm" id, "Gain reduction level meter" name, GAIN_AMP_0_DB, GAIN_AMP_0_DB), \
         METER_OUT_GAIN("olm" id, "Output level meter" name, GAIN_AMP_P_60_DB)
