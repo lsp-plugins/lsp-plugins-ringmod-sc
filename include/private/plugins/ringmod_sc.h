@@ -102,6 +102,7 @@ namespace lsp
 
                     float               fPeak;                  // Current sidechain peak value
                     uint32_t            nHold;                  // Hold counter
+                    float              *vInData;                // Input signal data
                     float              *vBuffer;                // Temporary data
 
                     // Ports
@@ -124,6 +125,10 @@ namespace lsp
                 uint32_t            nHold;                  // Hold signal
                 float               fTauRelease;            // Release time constant
                 float               fStereoLink;            // Stereo linking
+                float               fInGain;                // Input gain
+                float               fAmount;                // The amount of data to subtract
+                float               fDry;                   // Dry amount of signal
+                float               fWet;                   // Wet amount of signal
 
                 plug::IPort        *pBypass;                // Bypass
                 plug::IPort        *pGainIn;                // Input gain
@@ -145,12 +150,13 @@ namespace lsp
             protected:
                 void                do_destroy();
                 void                update_premix();
-                void                premix_channels(io_buffers_t * io, size_t samples);
-                void                process_sidechain_type(float **sc, io_buffers_t * io, size_t samples);
+                void                premix_channels(io_buffers_t *io, size_t samples);
+                void                process_sidechain_type(float **sc, io_buffers_t *io, size_t samples);
                 void                process_sidechain_envelope(float **sc, size_t samples);
                 void                process_sidechain_delays(float **sc, size_t samples);
                 void                process_sidechain_stereo_link(float **sc, size_t samples);
-                void                process_sidechain_signal(io_buffers_t * io, size_t samples);
+                void                process_sidechain_signal(io_buffers_t *io, size_t samples);
+                void                apply_sidechain_signal(io_buffers_t *io, size_t samples);
 
             public:
                 explicit ringmod_sc(const meta::plugin_t *meta);

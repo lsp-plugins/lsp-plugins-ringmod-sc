@@ -97,6 +97,7 @@ namespace lsp
             CONTROL("duck", "Ducking time", "Duck", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("amount", "Amount", "Amount", U_DB, ringmod_sc::AMOUNT),
 
+            SWITCH("showmx", "Show mix overlay", "Show mix bar", 0.0f), \
             AMP_GAIN10("dry", "Dry gain", "Dry", GAIN_AMP_M_INF_DB),
             AMP_GAIN10("wet", "Wet gain", "Wet", GAIN_AMP_0_DB),
             PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),
@@ -124,6 +125,7 @@ namespace lsp
             CONTROL("duck", "Ducking time", "Duck", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("amount", "Amount", "Amount", U_DB, ringmod_sc::AMOUNT),
 
+            SWITCH("showmx", "Show mix overlay", "Show mix bar", 0.0f), \
             AMP_GAIN10("dry", "Dry gain", "Dry", GAIN_AMP_M_INF_DB),
             AMP_GAIN10("wet", "Wet gain", "Wet", GAIN_AMP_0_DB),
             PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),

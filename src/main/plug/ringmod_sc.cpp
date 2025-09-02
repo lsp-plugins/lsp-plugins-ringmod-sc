@@ -96,6 +96,10 @@ namespace lsp
             nHold               = 0;
             fTauRelease         = 1.0f;
             fStereoLink         = 0.0f;
+            fInGain             = GAIN_AMP_0_DB;
+            fAmount             = GAIN_AMP_0_DB;
+            fDry                = 0.0f;
+            fWet                = GAIN_AMP_0_DB;
 
             pBypass             = NULL;
             pGainIn             = NULL;
@@ -135,7 +139,10 @@ namespace lsp
             size_t alloc            = szof_channels +
                                       buf_sz +  // vEmptyBuffer
                                       buf_sz +  // vBuffer
-                                      nChannels * buf_sz +  // channel_t::vBuffer
+                                      nChannels * ( // channel_t
+                                          buf_sz +  // vIndata
+                                          buf_sz    // vBuffer
+                                      ) +
                                       nChannels * 3 * buf_sz; // sPremix buffers
 
             // Allocate memory-aligned data
@@ -167,6 +174,7 @@ namespace lsp
 
                 c->fPeak                = 0.0f;
                 c->nHold                = 0;
+                c->vInData              = advance_ptr_bytes<float>(ptr, buf_sz);
                 c->vBuffer              = advance_ptr_bytes<float>(ptr, buf_sz);
 
                 // Initialize fields
@@ -222,6 +230,8 @@ namespace lsp
             BIND_PORT(pLookahead);
             BIND_PORT(pDuck);
             BIND_PORT(pAmount);
+
+            SKIP_PORT("Show dry/wet overlay");
             BIND_PORT(pDry);
             BIND_PORT(pWet);
             BIND_PORT(pDryWet);
@@ -306,6 +316,7 @@ namespace lsp
             fTauRelease             = 1.0f - expf(logf(1.0f - M_SQRT1_2) / (dspu::millis_to_samples(fSampleRate, release)));
             nLookahead              = dspu::millis_to_samples(fSampleRate, pLookahead->value());
             nDuck                   = nLookahead + dspu::millis_to_samples(fSampleRate, pDuck->value());
+            fAmount                 = dspu::db_to_gain(pAmount->value());
 
             for (size_t i=0; i<nChannels; ++i)
             {
@@ -314,6 +325,16 @@ namespace lsp
                 c->sBypass.set_bypass(bypass);
                 c->sInDelay.set_delay(nLookahead);
             }
+
+            // Compute Dry/Wet balance
+            const float out_gain    = pGainOut->value();
+            const float dry_gain    = pDry->value();
+            const float wet_gain    = pWet->value();
+            const float drywet      = pDryWet->value() * 0.01f;
+
+            fInGain                 = pGainIn->value();
+            fDry                    = (dry_gain * drywet + 1.0f - drywet) * out_gain;
+            fWet                    = wet_gain * drywet * out_gain;
 
             // Report latency
             set_latency(nLookahead);
@@ -581,7 +602,26 @@ namespace lsp
             // Now we can perform linking
             if (nChannels > 1)
                 process_sidechain_stereo_link(sc, samples);
+        }
 
+        void ringmod_sc::apply_sidechain_signal(io_buffers_t *io_buf, size_t samples)
+        {
+            // Process each channel independently
+            for (size_t i=0; i<nChannels; ++i)
+            {
+                channel_t * const c     = &vChannels[i];
+                io_buffers_t * const io = &io_buf[i];
+
+                // Apply lookahead delay
+                c->sInDelay.process(c->vInData, io->vIn, fInGain, samples);
+
+                // Modulate the signal with the sidechain and subtract from original signal
+                dsp::mul2(c->vBuffer, c->vInData, samples);
+                dsp::fmsub_k4(vBuffer, c->vInData, c->vBuffer, fAmount, samples);
+
+                // Apply bypass
+                c->sBypass.process_drywet(io->vOut, vBuffer, c->vInData, fDry, fWet, samples);
+            }
         }
 
         void ringmod_sc::process(size_t samples)
@@ -609,19 +649,10 @@ namespace lsp
             {
                 const size_t to_process     = lsp_min(samples - offset, BUFFER_SIZE);
 
-                // Pre-mix channel data
+                // Do processing
                 premix_channels(io_buf, to_process);
                 process_sidechain_signal(io_buf, to_process);
-
-                // Process each channel independently
-                for (size_t i=0; i<nChannels; ++i)
-                {
-                    io_buffers_t * const io = &io_buf[i];
-//                    channel_t *c            = &vChannels[i];
-
-                    // Just pass signal to output buffer
-                    dsp::copy(io->vOut, io->vIn, to_process);
-                }
+                apply_sidechain_signal(io_buf, to_process);
 
                 // Update pointer
                 offset             += to_process;
