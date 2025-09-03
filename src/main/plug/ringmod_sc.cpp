@@ -333,7 +333,10 @@ namespace lsp
                 c->sScDelay.init(sc_max_delay + BUFFER_SIZE);
 
                 for (size_t j=0; j<MG_TOTAL; ++j)
+                {
+                    c->vGraph[j].init(meta::ringmod_sc::TIME_MESH_SIZE, samples_per_dot);
                     c->vGraph[j].set_period(samples_per_dot);
+                }
             }
         }
 
@@ -474,14 +477,14 @@ namespace lsp
             }
         }
 
-        void ringmod_sc::process_sidechain_type(float **sc, io_buffers_t * io, size_t samples)
+        void ringmod_sc::process_sidechain_type(float **sc, io_buffers_t *io, size_t samples)
         {
             // Select the source for the specific type of sidechain
             for (size_t i=0; i<nChannels; ++i)
             {
-                float *buf          = (nType == SC_TYPE_EXTERNAL) ? io->vScIn :
-                                      (nType == SC_TYPE_SHM_LINK) ? io->vShmIn :
-                                      io->vIn;
+                float *buf          = (nType == SC_TYPE_EXTERNAL) ? io[i].vScIn :
+                                      (nType == SC_TYPE_SHM_LINK) ? io[i].vShmIn :
+                                      io[i].vIn;
 
                 sc[i]               = (buf != NULL) ? buf : vEmptyBuffer;
             }
@@ -702,7 +705,7 @@ namespace lsp
         void ringmod_sc::output_meshes()
         {
             plug::mesh_t *mesh = (pGraphMesh != NULL) ? pGraphMesh->buffer<plug::mesh_t>() : NULL;
-            if ((mesh != NULL) && (!mesh->isEmpty()))
+            if ((mesh != NULL) && (mesh->isEmpty()))
             {
                 size_t index    = 0;
                 float *v        = mesh->pvData[index++];

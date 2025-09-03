@@ -1,3 +1,309 @@
 <plugin resizable="true">
+	<vbox>
+		<!-- Top part -->
+		<grid rows="3" cols="2" hspacing="4">
+			<group ui:inject="GraphGroup" ipadding="0" expand="true" fill="true" text="labels.graphs.time">
+				<!-- Time graph -->
+				<graph width.min="560" height.min="280" expand="true">
+					<origin hpos="1" vpos="-1" visible="false"/>
 
+					<!-- Gray grid -->
+					<marker v="-12 db" ox="1" oy="0" color="graph_alt_1"/>
+					<marker v="-36 db" ox="1" oy="0" color="graph_alt_1"/>
+					<marker v="-60 db" ox="1" oy="0" color="graph_alt_1"/>
+					<ui:for id="t" first="0" last="4">
+						<marker v="${t}.5" ox="0" oy="1" color="graph_alt_1"/>
+					</ui:for>
+					<!-- Yellow grid -->
+					<marker v="-24 db" ox="1" oy="0" color="graph_sec"/>
+					<ui:for id="t" first="1" last="4">
+						<marker v="${t}" ox="0" oy="1" color="graph_sec"/>
+					</ui:for>
+
+					<!-- Axis -->
+					<axis min="0" max="5" color="graph_prim" angle="1.0" log="false" visibility="false"/>
+					<axis min="-48 db" max="12 db" color="graph_prim" angle="0.5" log="true" visibility="false"/>
+
+					<!-- Baseline -->
+					<marker v="0 db" ox="1" oy="0" color="graph_prim" width="2"/>
+
+					<!-- Meshes -->
+					<ui:with id="mg" xi="0">
+						<!-- Mono -->
+						<ui:if test="!ex :in_r">
+							<mesh yi="1" width="0" color="left_in" fcolor="left_in" fcolor.a="0.8" fill="true" visibility=":ilv"/>
+							<mesh yi="4" width="2" color="left" visibility=":olv"/>
+							<mesh yi="2" width="2" color="sidechain_1" visibility=":slv"/>
+							<mesh yi="3" width="2" color="bright_blue" visibility=":grv" fcolor="bright_blue" fcolor.a="0.8" fill="true"/>
+						</ui:if>
+						
+						<!-- Stereo -->
+						<ui:if test="ex :in_r">
+							<mesh yi="1" width="0" color="left_in" fcolor="left_in" fcolor.a="0.8" fill="true" visibility=":ilv_l"/>
+							<mesh yi="5" width="0" color="right_in" fcolor="right_in" fcolor.a="0.8" fill="true" visibility=":ilv_r"/>
+							<mesh yi="4" width="2" color="left" visibility=":olv_l"/>
+							<mesh yi="8" width="2" color="right" visibility=":olv_r"/>
+							<mesh yi="2" width="2" color="sidechain_1" visibility=":slv_l"/>
+							<mesh yi="6" width="2" color="sidechain_2" visibility=":slv_r"/>
+							<mesh yi="3" width="2" color="bright_blue" visibility=":grv_l" fcolor="bright_blue" fcolor.a="0.8" fill="true"/>
+							<mesh yi="7" width="2" color="bright_blue" visibility=":grv_r" fcolor="bright_blue" fcolor.a="0.8" fill="true"/>
+						</ui:if>
+					</ui:with>
+					
+					<!-- Text -->
+					<ui:attributes x="5" halign="1" valign="-1">
+						<text y="12 db" text="graph.values.x:db" text:value="12"/>
+						<text y="0 db" text="0"/>
+						<text y="-12 db" text="-12"/>
+						<text y="-24 db" text="-24"/>
+						<text y="-36 db" text="-36"/>
+						<text y="-48 db" text="graph.units.s" valign="1"/>
+					</ui:attributes>
+					<ui:for id="t" first="0" last="4">
+						<text x="${t}" y="-48 db" text="${t}" halign="-1" valign="1"/>
+						<text x="${t}.5" y="-48 db" text="${t}.5" halign="-1" valign="1"/>
+					</ui:for>
+				</graph>
+			</group>
+
+			<grid rows="3" cols="4" hfill="false" hexpand="false" hspacing="4">
+				<ui:with bg.color="bg_schema">
+					<label text="labels.sc.SC" padding="4"/>
+					<label text="labels.gain_" padding="4"/>
+					<label text="labels.chan.in" padding="4"/>
+					<label text="labels.chan.out" padding="4"/>
+
+					<!-- Mono -->
+					<ui:if test="!ex :in_r">
+						<button id="slv" height="10" width="22" ui:inject="Button_orange" led="true"/>
+						<button id="grv" height="10" width="22" ui:inject="Button_blue" led="true"/>
+						<button id="ilv" height="10" width="22" ui:inject="Button_left" led="true"/>
+						<button id="olv" height="10" width="22" ui:inject="Button_left" led="true"/>
+					</ui:if>
+
+					<!-- Stereo -->
+					<ui:if test="ex :in_r">
+						<hbox spacing="2">
+							<button id="slv_l" size="10" ui:inject="Button_orange" led="true"/>
+							<button id="slv_r" size="10" ui:inject="Button_orange" led="true"/>
+						</hbox>
+	
+						<hbox spacing="2">
+							<button id="grv_l" size="10" ui:inject="Button_blue" led="true"/>
+							<button id="grv_r" size="10" ui:inject="Button_blue" led="true"/>
+						</hbox>
+	
+						<hbox spacing="2">
+							<button id="ilv_l" size="10" ui:inject="Button_left" led="true"/>
+							<button id="ilv_r" size="10" ui:inject="Button_right" led="true"/>
+						</hbox>
+	
+						<hbox spacing="2">
+							<button id="olv_l" size="10" ui:inject="Button_left" led="true"/>
+							<button id="olv_r" size="10" ui:inject="Button_right" led="true"/>
+						</hbox>
+					</ui:if>
+				</ui:with>
+				
+				<!-- Sidechain signal meter mono-->
+				<ui:if test="!ex :in_r">
+					<ledmeter vexpand="true" height.min="256" angle="1">
+						<ledchannel id="slm" min="-48 db" max="0 db" log="true" type="peak" activity=":slv" value.color="sidechain_1"/>
+					</ledmeter>
+	
+					<!-- Gain signal meter -->
+					<ledmeter vexpand="true" height.min="256" angle="1">
+						<ledchannel id="grm" min="-48 db" max="0 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv" value.color="blue"/>
+					</ledmeter>
+	
+					<!-- Input signal meter -->
+					<ledmeter vexpand="true" height.min="256" angle="1">
+						<ledchannel id="ilm" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv" value.color="left_in"/>
+					</ledmeter>
+	
+					<!-- Output signal meter -->
+					<ledmeter vexpand="true" height.min="256" angle="1">
+						<ledchannel id="olm" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv" value.color="left"/>
+					</ledmeter>
+				</ui:if>
+
+				<!-- Sidechain signal meter stereo -->
+				<ui:if test="ex :in_r">
+					<ledmeter vexpand="true" height.min="256" angle="1">
+						<ledchannel id="slm_l" min="-48 db" max="0 db" log="true" type="peak" activity=":slv_l" value.color="sidechain_1"/>
+						<ledchannel id="slm_r" min="-48 db" max="0 db" log="true" type="peak" activity=":slv_r" value.color="sidechain_2"/>
+					</ledmeter>
+	
+					<!-- Gain signal meter -->
+					<ledmeter vexpand="true" height.min="256" angle="1">
+						<ledchannel id="grm_l" min="-48 db" max="0 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv_l" value.color="blue"/>
+						<ledchannel id="grm_r" min="-48 db" max="0 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv_r" value.color="blue"/>
+					</ledmeter>
+	
+					<!-- Input signal meter -->
+					<ledmeter vexpand="true" height.min="256" angle="1">
+						<ledchannel id="ilm_l" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv_l" value.color="left_in"/>
+						<ledchannel id="ilm_r" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv_r" value.color="right_in"/>
+					</ledmeter>
+	
+					<!-- Output signal meter -->
+					<ledmeter vexpand="true" height.min="256" angle="1">
+						<ledchannel id="olm_l" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv_l" value.color="left"/>
+						<ledchannel id="olm_r" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv_r" value.color="right"/>
+					</ledmeter>
+				</ui:if>
+			</grid>
+
+			<cell cols="2">
+				<void bg.color="bg" vexpand="false" fill="false" pad.v="2"/>
+			</cell>
+			<cell cols="2">
+				<hbox spacing="4" bg.color="bg_schema" pad.h="6" >
+					<label text="labels.sc.type"/>
+					<combo id="type" pad.r="12" pad.v="4"/>
+					<ui:if test="ex :in_r">
+						<label text="labels.sc.source"/>
+						<combo id="source" pad.r="12"/>
+					</ui:if>
+
+					<void hexpand="true" />
+
+					<button ui:id="premix_trigger" id="showpmx" text="labels.premix" size="22" />
+					<button ui:id="mix_trigger" id="showmx" text="labels.mix" size="22" pad.v="4"/>
+					
+					<!-- button id="pause" height="22" width="48" text="labels.pause" ui:inject="Button_green"/>
+					<button id="clear" height="22" width="48" text="labels.clear" ui:inject="Button_red" pad.r="2"/-->
+
+					<vsep pad.h="2" bg.color="bg" reduce="true"/>
+					<shmlink id="link" pad.l="2"/>
+				</hbox>
+			</cell>
+
+		</grid>
+
+		<!-- Separator -->
+		<void bg.color="bg" fill="true" pad.v="2" reduce="true"/>
+
+		<!-- Bottom part -->
+		<hbox spacing="4" vreduce="true">
+			<!-- Ringmod setup -->
+			<group text="groups.processor" ipadding="0" >
+				<grid rows="3" cols="${(ex :in_r) ? 11 : 9}">
+					<!-- row 1 -->
+					<label text="labels.sc.lookahead" pad.h="6" pad.t="6" fill="false" hexpand="true" vreduce="true"/>
+					<cell rows="3" hreduce="true" pad.h="2"><vsep/></cell>
+					<label text="labels.sc.ducking" pad.h="6" pad.t="6" fill="false" hexpand="true" vreduce="true"/>
+					<cell rows="3" hreduce="true" pad.h="2"><vsep/></cell>
+					<label text="labels.hold" pad.h="6" pad.t="6" fill="false" hexpand="true" vreduce="true"/>
+					<cell rows="3" hreduce="true" pad.h="2"><vsep/></cell>
+					<label text="labels.release" pad.h="6" pad.t="6" fill="false" hexpand="true" vreduce="true"/>
+					<cell rows="3" hreduce="true" pad.h="2"><vsep/></cell>
+					<label text="labels.amount" pad.h="6" pad.t="6" fill="false" hexpand="true" vreduce="true"/>
+					
+					<ui:if test="ex :in_r" >
+						<cell rows="3" hreduce="true" pad.h="2"><vsep/></cell>
+						<label text="labels.stereo_link" pad.h="6" pad.t="4" fill="false" hexpand="true" vreduce="true"/>
+					</ui:if>
+					
+					<!-- row 2 -->
+					<knob id="lk" pad.t="5" pad.b="4" pad.h="6"/>
+					<knob id="duck" pad.t="5" pad.b="4" pad.h="6"/>
+					<knob id="hold" pad.t="5" pad.b="4" pad.h="6"/>
+					<knob id="release" pad.t="5" pad.b="4" pad.h="6"/>
+					<knob id="amount" pad.t="5" pad.b="4" pad.h="6"/>
+					
+					<ui:if test="ex :in_r" >
+						<knob id="slink" scolor="balance"/>
+					</ui:if>
+					
+					<!-- row 3 -->
+					<value id="lk" pad.b="6" pad.h="6"/>
+					<value id="duck" pad.b="6" pad.h="6"/>
+					<value id="hold" pad.b="6" pad.h="6"/>
+					<value id="release" pad.b="6" pad.h="6"/>
+					<value id="amount" pad.b="6" pad.h="6"/>
+					<ui:if test="ex :in_r" >
+						<value id="slink" pad.b="6" pad.h="6"/>
+					</ui:if>
+				</grid>
+			</group>
+
+			<!-- Signal control -->
+			<group text="groups.signal">
+				<grid rows="3" cols="2">
+					<ui:with pad.h="6" fill="false" hexpand="true" vreduce="true">
+						<label text="labels.input"/>
+						<label text="labels.output"/>
+					</ui:with>
+					<ui:with pad.t="5" pad.b="4">
+						<knob id="g_in"/>
+						<knob id="g_out"/>
+					</ui:with>
+
+					<value id="g_in"/>
+					<value id="g_out"/>
+				</grid>
+			</group>
+		</hbox>
+	</vbox>
+	
+	<!-- Premix overlay -->
+	<overlay id="showpmx" trigger="premix_trigger" hpos="1" vpos="1" halign="-1" valign="1" ipadding.t="4">
+		<group text="groups.premix" vexpand="false" ipadding="0">
+			<grid rows="3" cols="8" spacing="0" bg.color="bg_schema" transpose="true">
+				<label text="labels.premix.in_to_sc" pad.h="6" pad.v="4" />
+				<knob id="in2sc" />
+				<value id="in2sc" pad.h="6" pad.v="4" />
+				
+				<label text="labels.premix.in_to_link" pad.h="6" pad.v="4" />
+				<knob id="in2lk" />
+				<value id="in2lk" />
+				
+				<cell rows="3"><vsep pad.h="2" bg.color="bg" reduce="true" /></cell>
+				
+				<label text="labels.premix.sc_to_in" pad.h="6" pad.v="4" />
+				<knob id="sc2in" />
+				<value id="sc2in" pad.h="6" pad.v="4" />
+				
+				<label text="labels.premix.sc_to_link" pad.h="6" pad.v="4" />
+				<knob id="sc2lk" />
+				<value id="sc2lk" pad.h="6" pad.v="4" />
+				
+				<cell rows="3"><vsep pad.h="2" bg.color="bg" reduce="true" /></cell>
+				
+				<label text="labels.premix.link_to_in" pad.h="6" pad.v="4" />
+				<knob id="lk2in" />
+				<value id="lk2in" pad.h="6" pad.v="4" />
+				
+				<label text="labels.premix.link_to_sc" pad.h="6" pad.v="4" />
+				<knob id="lk2sc" />
+				<value id="lk2sc" pad.h="6" pad.v="4" />
+			</grid>
+		</group>
+	</overlay>
+	
+	<!-- Mix overlay -->
+	<overlay id="showmx" trigger="mix_trigger" hpos="1" vpos="1" halign="-1" valign="1" ipadding.t="4">
+		<group text="groups.mix" vexpand="false" ipadding="0">
+			<grid rows="3" cols="4" spacing="0" bg.color="bg_schema" height="139">
+				<!-- Row 1 -->
+				<ui:with width.min="56" pad.t="8">
+					<label text="labels.signal.dry" pad.h="6" width="44" pad.v="4"/>
+					<label text="labels.signal.wet" pad.h="6" width="44" pad.v="4"/>
+					<cell rows="3" bg.color="bg" pad.h="2" hreduce="true"><vsep/></cell>
+					<label text="labels.signal.drywet" pad.h="6" width="44" pad.v="4"/>
+				</ui:with>
+
+				<!-- Row 2 -->
+				<knob id="dry" size="20" scolor="dry"/>
+				<knob id="wet" size="20" scolor="wet"/>
+				<knob id="drywet" size="20" scolor="drywet"/>
+
+				<!-- Row 3 -->
+				<value id="dry" pad.v="4"/>
+				<value id="wet" pad.v="4"/>
+				<value id="drywet" pad.v="4"/>
+			</grid>
+		</group>
+	</overlay>
 </plugin>

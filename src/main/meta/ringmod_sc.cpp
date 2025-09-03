@@ -103,7 +103,7 @@ namespace lsp
             COMBO("type", "Sidechain type", "Type", 1, ringmod_sc_types),
             CONTROL("hold", "Hold time", "Hold", U_MSEC, ringmod_sc::HOLD),
             CONTROL("release", "Release time", "Release", U_MSEC, ringmod_sc::RELEASE),
-            CONTROL("lahead", "Lookahead time", "Lookahead", U_MSEC, ringmod_sc::RELEASE),
+            CONTROL("lk", "Lookahead time", "Lookahead", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("duck", "Ducking time", "Duck", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("amount", "Amount", "Amount", U_DB, ringmod_sc::AMOUNT),
 
@@ -135,7 +135,7 @@ namespace lsp
             PERCENTS("slink", "Stereo link", "Stereo link", 0.0f, 0.1f),
             CONTROL("hold", "Hold time", "Hold", U_MSEC, ringmod_sc::HOLD),
             CONTROL("release", "Release time", "Release", U_MSEC, ringmod_sc::RELEASE),
-            CONTROL("lahead", "Lookahead time", "Lookahead", U_MSEC, ringmod_sc::RELEASE),
+            CONTROL("lk", "Lookahead time", "Lookahead", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("duck", "Ducking time", "Duck", U_MSEC, ringmod_sc::RELEASE),
             CONTROL("amount", "Amount", "Amount", U_DB, ringmod_sc::AMOUNT),
 
