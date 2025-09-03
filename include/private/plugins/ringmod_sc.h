@@ -114,6 +114,7 @@ namespace lsp
 
                     float               fPeak;                  // Current sidechain peak value
                     uint32_t            nHold;                  // Hold counter
+                    bool                vVisible[MG_TOTAL];     // Meter visibility
                     float               vValues[MG_TOTAL];      // Meter values
                     float              *vInData;                // Input signal data
                     float              *vBuffer;                // Temporary data
@@ -123,6 +124,7 @@ namespace lsp
                     plug::IPort        *pOut;                   // Output port
                     plug::IPort        *pScIn;                  // Sidechain input port
                     plug::IPort        *pShmIn;                 // Shared memory link input port
+                    plug::IPort        *vVisibility[MG_TOTAL];  // Meters visibility
                     plug::IPort        *vMeters[MG_TOTAL];      // Meters
                 } channel_t;
 

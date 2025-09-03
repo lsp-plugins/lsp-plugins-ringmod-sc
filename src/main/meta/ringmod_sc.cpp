@@ -79,10 +79,14 @@ namespace lsp
     #define RMOD_SHM_LINK_STEREO \
         OPT_RETURN_STEREO("link", "shml_", "Side-chain shared memory link")
 
-    #define RMOD_METERS(id, name) \
+    #define RMOD_METERS(id, name, alias) \
+        SWITCH("ilv" id, "Input visiblity" name, "Show In" alias, 1), \
         METER_OUT_GAIN("ilm" id, "Input level meter" name, GAIN_AMP_P_60_DB), \
+        SWITCH("slv" id, "Sidechain visiblity" name, "Show SC" alias, 1), \
         METER_OUT_GAIN("slm" id, "Sidechain level meter" name, GAIN_AMP_P_60_DB), \
+        SWITCH("grv" id, "Gain reduction visiblity" name, "Show Gain" alias, 1), \
         METER_GAIN_DFL("grm" id, "Gain reduction level meter" name, GAIN_AMP_0_DB, GAIN_AMP_0_DB), \
+        SWITCH("olv" id, "Output level visiblity" name, "Show Out" alias, 1), \
         METER_OUT_GAIN("olm" id, "Output level meter" name, GAIN_AMP_P_60_DB)
 
         static const port_t ringmod_sc_mono_ports[] =
@@ -109,7 +113,7 @@ namespace lsp
             PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),
 
             // Meters
-            RMOD_METERS("", ""),
+            RMOD_METERS("", "", ""),
             MESH("mg", "Meter graphs", 1 + 1*4, ringmod_sc::TIME_MESH_SIZE + 4),
 
             PORTS_END
@@ -141,8 +145,8 @@ namespace lsp
             PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),
 
             // Meters
-            RMOD_METERS("_l", " Left"),
-            RMOD_METERS("_r", " Right"),
+            RMOD_METERS("_l", " Left", " L"),
+            RMOD_METERS("_r", " Right", " R"),
             MESH("mg", "Meter graphs", 1 + 2*4, ringmod_sc::TIME_MESH_SIZE + 4),
 
             PORTS_END

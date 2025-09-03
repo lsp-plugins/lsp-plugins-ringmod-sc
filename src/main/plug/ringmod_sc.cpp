@@ -188,7 +188,10 @@ namespace lsp
                 c->fPeak                = 0.0f;
                 c->nHold                = 0;
                 for (size_t j=0; j<MG_TOTAL; ++j)
-                    c->vValues[j]          = GAIN_AMP_M_INF_DB;
+                {
+                    c->vVisible[j]          = true;
+                    c->vValues[j]           = GAIN_AMP_M_INF_DB;
+                }
 
                 c->vInData              = advance_ptr_bytes<float>(ptr, buf_sz);
                 c->vBuffer              = advance_ptr_bytes<float>(ptr, buf_sz);
@@ -200,7 +203,10 @@ namespace lsp
                 c->pShmIn               = NULL;
 
                 for (size_t j=0; j<MG_TOTAL; ++j)
+                {
+                    c->vVisibility[j]       = NULL;
                     c->vMeters[j]           = NULL;
+                }
             }
 
             // Bind ports
@@ -259,7 +265,10 @@ namespace lsp
             lsp_trace("Binding meters");
             for (size_t i=0; i<nChannels; ++i)
                 for (size_t j=0; j<MG_TOTAL; ++j)
+                {
+                    BIND_PORT(vChannels[i].vVisibility[j]);
                     BIND_PORT(vChannels[i].vMeters[j]);
+                }
 
             BIND_PORT(pGraphMesh);
 
@@ -362,6 +371,9 @@ namespace lsp
 
                 c->sBypass.set_bypass(bypass);
                 c->sInDelay.set_delay(nLookahead);
+
+                for (size_t j=0; j<MG_TOTAL; ++j)
+                    c->vVisible[j]          = c->vVisibility[j]->value() >= 0.5f;
             }
 
             // Compute Dry/Wet balance
