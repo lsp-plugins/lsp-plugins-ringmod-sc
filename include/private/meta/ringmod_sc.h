@@ -34,9 +34,9 @@ namespace lsp
         typedef struct ringmod_sc
         {
             static constexpr float  HOLD_MIN            = 0.0f;
-            static constexpr float  HOLD_MAX            = 5.0f;
+            static constexpr float  HOLD_MAX            = 10.0f;
             static constexpr float  HOLD_DFL            = 0.0f;
-            static constexpr float  HOLD_STEP           = 0.01f;
+            static constexpr float  HOLD_STEP           = 0.005f;
 
             static constexpr float  RELEASE_MIN         = 0.0f;
             static constexpr float  RELEASE_MAX         = 100.0f;
@@ -44,19 +44,19 @@ namespace lsp
             static constexpr float  RELEASE_STEP        = 0.01f;
 
             static constexpr float  LOOKAHEAD_MIN       = 0.0f;
-            static constexpr float  LOOKAHEAD_MAX       = 5.0f;
+            static constexpr float  LOOKAHEAD_MAX       = 10.0f;
             static constexpr float  LOOKAHEAD_DFL       = 0.0f;
-            static constexpr float  LOOKAHEAD_STEP      = 0.01f;
+            static constexpr float  LOOKAHEAD_STEP      = 0.005f;
 
             static constexpr float  DUCK_MIN            = 0.0f;
-            static constexpr float  DUCK_MAX            = 5.0f;
+            static constexpr float  DUCK_MAX            = 10.0f;
             static constexpr float  DUCK_DFL            = 0.0f;
-            static constexpr float  DUCK_STEP           = 0.01f;
+            static constexpr float  DUCK_STEP           = 0.005f;
 
             static constexpr float  AMOUNT_MIN          = -12.0f;
             static constexpr float  AMOUNT_MAX          = 0.0f;
             static constexpr float  AMOUNT_DFL          = 0.0f;
-            static constexpr float  AMOUNT_STEP         = 0.1f;
+            static constexpr float  AMOUNT_STEP         = 0.01f;
 
             static constexpr size_t TIME_MESH_SIZE      = 640;
             static constexpr float  TIME_HISTORY_MAX    = 5.0f;

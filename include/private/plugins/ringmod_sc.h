@@ -76,6 +76,7 @@ namespace lsp
                     float              *vOut;
                     float              *vScIn;
                     float              *vShmIn;
+                    float              *vMixSc;
                 } io_buffers_t;
 
                 typedef struct premix_t
@@ -109,7 +110,8 @@ namespace lsp
                     // DSP processing modules
                     dspu::Bypass        sBypass;                // Bypass
                     dspu::Delay         sInDelay;               // Input signal delay
-                    dspu::RingBuffer    sScDelay;               // Sidechain delay buffer
+                    dspu::Delay         sScDelay;               // Sidechain input delay
+                    dspu::RingBuffer    sEnvDelay;              // Sidechain envelope delay buffer
                     dspu::MeterGraph    vGraph[MG_TOTAL];       // Meter graphs
 
                     float               fPeak;                  // Current sidechain peak value
@@ -143,13 +145,18 @@ namespace lsp
                 float               fTauRelease;            // Release time constant
                 float               fStereoLink;            // Stereo linking
                 float               fInGain;                // Input gain
+                float               fOutGain;               // Output gain
+                float               fScGain;                // Sidechain gain
                 float               fAmount;                // The amount of data to subtract
                 float               fDry;                   // Dry amount of signal
                 float               fWet;                   // Wet amount of signal
+                bool                bOutSc;                 // Output sidechain value
 
                 plug::IPort        *pBypass;                // Bypass
                 plug::IPort        *pGainIn;                // Input gain
+                plug::IPort        *pGainSc;                // Sidechain gain
                 plug::IPort        *pGainOut;               // Output gain
+                plug::IPort        *pOutSc;                 // Output sidechain
                 plug::IPort        *pType;                  // Sidechain type
                 plug::IPort        *pSource;                // Sidechain source
                 plug::IPort        *pStereoLink;            // Stereo linking
@@ -169,12 +176,11 @@ namespace lsp
                 void                do_destroy();
                 void                update_premix();
                 void                premix_channels(io_buffers_t *io, size_t samples);
-                void                process_sidechain_type(float **sc, io_buffers_t *io, size_t samples);
+                void                process_sidechain_type(float **sc, io_buffers_t *io_buf, size_t samples);
                 void                process_sidechain_envelope(float **sc, size_t samples);
                 void                process_sidechain_delays(float **sc, size_t samples);
                 void                process_sidechain_stereo_link(float **sc, size_t samples);
-                void                process_sidechain_signal(io_buffers_t *io, size_t samples);
-                void                apply_sidechain_signal(io_buffers_t *io, size_t samples);
+                void                apply_sidechain_signal(io_buffers_t *io_buf, size_t samples);
                 void                output_meters();
                 void                output_meshes();
 

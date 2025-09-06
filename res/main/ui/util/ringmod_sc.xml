@@ -230,17 +230,20 @@
 
 			<!-- Signal control -->
 			<group text="groups.signal">
-				<grid rows="3" cols="2">
+				<grid rows="3" cols="3">
 					<ui:with pad.h="6" fill="false" hexpand="true" vreduce="true">
 						<label text="labels.input"/>
+						<button id="out_sc" text="labels.sidechain"/>
 						<label text="labels.output"/>
 					</ui:with>
 					<ui:with pad.t="5" pad.b="4">
 						<knob id="g_in"/>
+						<knob id="g_sc"/>
 						<knob id="g_out"/>
 					</ui:with>
 
 					<value id="g_in"/>
+					<value id="g_sc"/>
 					<value id="g_out"/>
 				</grid>
 			</group>

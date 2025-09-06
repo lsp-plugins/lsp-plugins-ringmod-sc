@@ -98,13 +98,18 @@ namespace lsp
             fTauRelease         = 1.0f;
             fStereoLink         = 0.0f;
             fInGain             = GAIN_AMP_0_DB;
+            fOutGain            = GAIN_AMP_0_DB;
+            fScGain             = GAIN_AMP_0_DB;
             fAmount             = GAIN_AMP_0_DB;
             fDry                = 0.0f;
             fWet                = GAIN_AMP_0_DB;
+            bOutSc              = true;
 
             pBypass             = NULL;
             pGainIn             = NULL;
+            pGainSc             = NULL;
             pGainOut            = NULL;
+            pOutSc              = NULL;
             pSource             = NULL;
             nType               = SC_TYPE_EXTERNAL;
             nSource             = SC_SRC_LEFT_RIGHT;
@@ -177,6 +182,7 @@ namespace lsp
                 c->sBypass.construct();
                 c->sInDelay.construct();
                 c->sScDelay.construct();
+                c->sEnvDelay.construct();
 
                 for (size_t j=0; j<MG_TOTAL; ++j)
                     c->vGraph[j].construct();
@@ -243,7 +249,9 @@ namespace lsp
             // Bind common ports
             BIND_PORT(pBypass);
             BIND_PORT(pGainIn);
+            BIND_PORT(pGainSc);
             BIND_PORT(pGainOut);
+            BIND_PORT(pOutSc);
             BIND_PORT(pType);
             if (nChannels > 1)
             {
@@ -298,6 +306,7 @@ namespace lsp
                     c->sBypass.destroy();
                     c->sInDelay.destroy();
                     c->sScDelay.destroy();
+                    c->sEnvDelay.destroy();
 
                     for (size_t j=0; j<MG_TOTAL; ++j)
                         c->vGraph[j].destroy();
@@ -330,7 +339,8 @@ namespace lsp
                 channel_t *c    = &vChannels[i];
                 c->sBypass.init(sr);
                 c->sInDelay.init(in_max_delay + BUFFER_SIZE);
-                c->sScDelay.init(sc_max_delay + BUFFER_SIZE);
+                c->sScDelay.init(in_max_delay + BUFFER_SIZE);
+                c->sEnvDelay.init(sc_max_delay + BUFFER_SIZE);
 
                 for (size_t j=0; j<MG_TOTAL; ++j)
                 {
@@ -360,13 +370,12 @@ namespace lsp
             // Update sidechain processing
             nType                   = pType->value();
             nSource                 = (pSource != NULL) ? pSource->value() : SC_SRC_LEFT_RIGHT;
-            fStereoLink             = (pStereoLink != NULL) ? lsp_max(pStereoLink->value(), 0.0f) : 0.0f;
+            fStereoLink             = (pStereoLink != NULL) ? lsp_max(pStereoLink->value() * 0.01f, 0.0f) : 0.0f;
             nHold                   = dspu::millis_to_samples(fSampleRate, pHold->value());
             const float release     = pRelease->value();
             fTauRelease             = 1.0f - expf(logf(1.0f - M_SQRT1_2) / (dspu::millis_to_samples(fSampleRate, release)));
             nLookahead              = dspu::millis_to_samples(fSampleRate, pLookahead->value());
             nDuck                   = nLookahead + dspu::millis_to_samples(fSampleRate, pDuck->value());
-            fAmount                 = dspu::db_to_gain(pAmount->value());
 
             for (size_t i=0; i<nChannels; ++i)
             {
@@ -374,6 +383,7 @@ namespace lsp
 
                 c->sBypass.set_bypass(bypass);
                 c->sInDelay.set_delay(nLookahead);
+                c->sScDelay.set_delay(nLookahead);
 
                 for (size_t j=0; j<MG_TOTAL; ++j)
                     c->vVisible[j]          = c->vVisibility[j]->value() >= 0.5f;
@@ -384,10 +394,15 @@ namespace lsp
             const float dry_gain    = pDry->value();
             const float wet_gain    = pWet->value();
             const float drywet      = pDryWet->value() * 0.01f;
+            const float sc_gain     = pGainSc->value();
 
             fInGain                 = pGainIn->value();
+            fOutGain                = out_gain;
+            fScGain                 = sc_gain;
+            fAmount                 = dspu::db_to_gain(pAmount->value());
             fDry                    = (dry_gain * drywet + 1.0f - drywet) * out_gain;
             fWet                    = wet_gain * drywet * out_gain;
+            bOutSc                  = pOutSc->value() >= 0.5f;
 
             // Report latency
             set_latency(nLookahead);
@@ -486,7 +501,9 @@ namespace lsp
                                       (nType == SC_TYPE_SHM_LINK) ? io[i].vShmIn :
                                       io[i].vIn;
 
-                sc[i]               = (buf != NULL) ? buf : vEmptyBuffer;
+                float *const sc_buf = (buf != NULL) ? buf : vEmptyBuffer;
+                io[i].vMixSc        = sc_buf;
+                sc[i]               = sc_buf;
             }
 
             // Apply sidechain pre-processing depending on selected source (stereo only)
@@ -552,6 +569,8 @@ namespace lsp
         void ringmod_sc::process_sidechain_envelope(float **sc, size_t samples)
         {
             // Pre-process sidechain data for each channel
+            const float sc_gain = fScGain;
+
             for (size_t i=0; i<nChannels; ++i)
             {
                 channel_t *c        = &vChannels[i];
@@ -564,7 +583,7 @@ namespace lsp
 
                 for (size_t j=0; j<samples; ++j)
                 {
-                    float s             = fabsf(src[j]);      // Rectify input
+                    float s             = fabsf(src[j] * sc_gain);  // Rectify input
                     if (peak > s)
                     {
                         // Current rectified sample is below the peak value
@@ -575,7 +594,7 @@ namespace lsp
                         }
                         else
                         {
-                            s                  += (s - peak) * fTauRelease;
+                            s                   = peak + (s - peak) * fTauRelease;
                             peak                = s;
                         }
                     }
@@ -599,20 +618,21 @@ namespace lsp
             for (size_t i=0; i<nChannels; ++i)
             {
                 channel_t *c        = &vChannels[i];
+                float *sc_buf       = sc[i];
 
                 // Now push the buffer contents to the ring buffer
-                c->sScDelay.append(c->vBuffer, samples);
+                c->sEnvDelay.append(sc_buf, samples);
 
                 // Apply lookahead and ducking
                 if (nLookahead > 0)
                 {
-                    c->sScDelay.get(vBuffer, nLookahead + samples, samples);
-                    dsp::pmax2(c->vBuffer, vBuffer, samples);
+                    c->sEnvDelay.get(vBuffer, nLookahead + samples, samples);
+                    dsp::pmax2(sc_buf, vBuffer, samples);
                 }
                 if (nDuck > nLookahead)
                 {
-                    c->sScDelay.get(vBuffer, nDuck + samples, samples);
-                    dsp::pmax2(c->vBuffer, vBuffer, samples);
+                    c->sEnvDelay.get(vBuffer, nDuck + samples, samples);
+                    dsp::pmax2(sc_buf, vBuffer, samples);
                 }
             }
         }
@@ -639,24 +659,6 @@ namespace lsp
             }
         }
 
-        void ringmod_sc::process_sidechain_signal(io_buffers_t *io, size_t samples)
-        {
-            float *sc[2];
-
-            // Process sidechain signal depending on selected sidechain type
-            process_sidechain_type(sc, io, samples);
-
-            // Transform sidechain into envelope
-            process_sidechain_envelope(sc, samples);
-
-            // Apply lookahead and ducking
-            process_sidechain_delays(sc, samples);
-
-            // Now we can perform linking
-            if (nChannels > 1)
-                process_sidechain_stereo_link(sc, samples);
-        }
-
         void ringmod_sc::apply_sidechain_signal(io_buffers_t *io_buf, size_t samples)
         {
             // Process each channel independently
@@ -665,26 +667,36 @@ namespace lsp
                 channel_t * const c     = &vChannels[i];
                 io_buffers_t * const io = &io_buf[i];
 
-                // Apply lookahead delay
+                // Compute the gain reduction
+                // c->vBuffer contains envelope signal
+                // vBuffer should contain gain reduction
+                for (size_t j=0; j<samples; ++j)
+                    vBuffer[j]          = lsp_max(0.0f, GAIN_AMP_0_DB - c->vBuffer[j] * fAmount);
+                c->vGraph[MG_GAIN].process(vBuffer, samples);
+                c->vValues[MG_GAIN] = lsp_min(c->vValues[MG_GAIN], dsp::abs_min(vBuffer, samples));
+
+                // Apply lookahead delay for input signal
                 c->sInDelay.process(c->vInData, io->vIn, fInGain, samples);
                 c->vGraph[MG_IN].process(c->vInData, samples);
                 c->vValues[MG_IN]   = lsp_max(c->vValues[MG_IN], dsp::abs_max(c->vInData, samples));
                 c->vGraph[MG_SC].process(c->vBuffer, samples);
                 c->vValues[MG_SC]   = lsp_max(c->vValues[MG_SC], dsp::abs_max(c->vBuffer, samples));
 
-                // Modulate the signal with the sidechain and subtract from original signal
-                dsp::mul2(c->vBuffer, c->vInData, samples);                         // c->vBuffer = ring-modulated data
-                dsp::fmsub_k4(vBuffer, c->vInData, c->vBuffer, fAmount, samples);   // vBuffer    = processed signal
-
-                for (size_t j=0; j<samples; ++j)
-                    c->vBuffer[j]       = lsp_max(0.0f, GAIN_AMP_0_DB - c->vBuffer[j] * fAmount); // c->vBuffer = gain reduction
-                c->vGraph[MG_GAIN].process(c->vBuffer, samples);
-                c->vValues[MG_GAIN] = lsp_min(c->vValues[MG_GAIN], dsp::abs_min(c->vBuffer, samples));
-
-                // Apply Dry/wet balance
+                // Apply gain reduction and mix dry/wet signal
+                dsp::mul2(vBuffer, c->vInData, samples); // vBuffer now contains gain-reduced input signal
                 dsp::mix2(vBuffer, c->vInData, fWet, fDry, samples);
 
-                c->vGraph[MG_OUT].process(c->vBuffer, samples);
+                // Add sidechain signal and process graph for output
+                const float sc_out_gain = (bOutSc) ? fScGain * fOutGain : GAIN_AMP_M_INF_DB;
+                if (sc_out_gain > GAIN_AMP_M_INF_DB)
+                {
+                    c->sScDelay.process(c->vBuffer, io->vMixSc, sc_out_gain, samples);
+                    dsp::add2(vBuffer, c->vBuffer, samples);
+                }
+                else
+                    c->sScDelay.append(io->vMixSc, samples);
+
+                c->vGraph[MG_OUT].process(vBuffer, samples);
                 c->vValues[MG_OUT]  = lsp_max(c->vValues[MG_OUT], dsp::abs_max(vBuffer, samples));
 
                 // Apply bypass
@@ -746,6 +758,7 @@ namespace lsp
         void ringmod_sc::process(size_t samples)
         {
             io_buffers_t io_buf[2];
+            float *sc[2];
 
             // Prepare audio channels
             for (size_t i=0; i<nChannels; ++i)
@@ -776,7 +789,11 @@ namespace lsp
 
                 // Do processing
                 premix_channels(io_buf, to_process);
-                process_sidechain_signal(io_buf, to_process);
+                process_sidechain_type(sc, io_buf, to_process);
+                process_sidechain_envelope(sc, to_process);
+                process_sidechain_delays(sc, to_process);
+                if (nChannels > 1)
+                    process_sidechain_stereo_link(sc, to_process);
                 apply_sidechain_signal(io_buf, to_process);
 
                 // Update pointer
