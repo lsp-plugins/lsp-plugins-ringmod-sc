@@ -355,7 +355,8 @@ namespace lsp
 
                 for (size_t j=0; j<MG_TOTAL; ++j)
                 {
-                    c->vGraph[j].init(meta::ringmod_sc::TIME_MESH_SIZE, samples_per_dot);
+                    const float dfl = (j == MG_GAIN) ? GAIN_AMP_0_DB : GAIN_AMP_M_INF_DB;
+                    c->vGraph[j].init(meta::ringmod_sc::TIME_MESH_SIZE, samples_per_dot, dfl);
                     c->vGraph[j].set_period(samples_per_dot);
                 }
             }
@@ -785,7 +786,7 @@ namespace lsp
                             mg->clear();
 
                         v               = mesh->pvData[index++];
-                        dsp::copy(&v[2], mg->data(), meta::ringmod_sc::TIME_MESH_SIZE);
+                        mg->read(&v[2], meta::ringmod_sc::TIME_MESH_SIZE);
 
                         v[0]            = g;
                         v[1]            = v[2];
