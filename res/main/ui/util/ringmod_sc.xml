@@ -159,6 +159,13 @@
 			</cell>
 			<cell cols="2">
 				<hbox spacing="4" bg.color="bg_schema" pad.h="6" >
+					<button id="pause" height="22" width="48" text="labels.pause" pad.v="4" ui:inject="Button_green"/>
+					<button id="clear" height="22" width="48" text="labels.clear" pad.v="4" ui:inject="Button_red"/>
+					
+					<vsep pad.h="2" bg.color="bg" reduce="true"/>
+					
+					<button id="active" height="22" width="48" text="labels.active" pad.v="4" ui:inject="Button_green"/>
+					
 					<label text="labels.sc.type"/>
 					<combo id="type" pad.r="12" pad.v="4"/>
 					<ui:if test="ex :in_r">
@@ -232,7 +239,7 @@
 			<group text="groups.signal">
 				<grid rows="3" cols="3">
 					<ui:with pad.h="6" fill="false" hexpand="true" vreduce="true">
-						<label text="labels.input"/>
+						<button id="out_in" text="labels.input"/>
 						<button id="out_sc" text="labels.sidechain"/>
 						<label text="labels.output"/>
 					</ui:with>

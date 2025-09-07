@@ -92,6 +92,8 @@ namespace lsp
             sPremix.pScToIn     = NULL;
             sPremix.pScToLink   = NULL;
 
+            nType               = SC_TYPE_EXTERNAL;
+            nSource             = SC_SRC_LEFT_RIGHT;
             nLookahead          = 0;
             nDuck               = 0;
             nHold               = 0;
@@ -103,17 +105,20 @@ namespace lsp
             fAmount             = GAIN_AMP_0_DB;
             fDry                = 0.0f;
             fWet                = GAIN_AMP_0_DB;
+            bOutIn              = true;
             bOutSc              = true;
+            bActive             = true;
+            bPause              = false;
+            bClear              = false;
+            bUISync             = false;
 
             pBypass             = NULL;
             pGainIn             = NULL;
             pGainSc             = NULL;
             pGainOut            = NULL;
+            pOutIn              = NULL;
             pOutSc              = NULL;
-            pSource             = NULL;
-            nType               = SC_TYPE_EXTERNAL;
-            nSource             = SC_SRC_LEFT_RIGHT;
-
+            pActive             = NULL;
             pType               = NULL;
             pSource             = NULL;
             pStereoLink         = NULL;
@@ -125,6 +130,8 @@ namespace lsp
             pDry                = NULL;
             pWet                = NULL;
             pDryWet             = NULL;
+            pPause              = NULL;
+            pClear              = NULL;
 
             pGraphMesh          = NULL;
 
@@ -251,7 +258,9 @@ namespace lsp
             BIND_PORT(pGainIn);
             BIND_PORT(pGainSc);
             BIND_PORT(pGainOut);
+            BIND_PORT(pOutIn);
             BIND_PORT(pOutSc);
+            BIND_PORT(pActive);
             BIND_PORT(pType);
             if (nChannels > 1)
             {
@@ -271,6 +280,8 @@ namespace lsp
 
             // Bind meters
             lsp_trace("Binding meters");
+            BIND_PORT(pPause);
+            BIND_PORT(pClear);
             for (size_t i=0; i<nChannels; ++i)
                 for (size_t j=0; j<MG_TOTAL; ++j)
                 {
@@ -402,10 +413,20 @@ namespace lsp
             fAmount                 = dspu::db_to_gain(pAmount->value());
             fDry                    = (dry_gain * drywet + 1.0f - drywet) * out_gain;
             fWet                    = wet_gain * drywet * out_gain;
+            bOutIn                  = pOutIn->value() >= 0.5f;
             bOutSc                  = pOutSc->value() >= 0.5f;
+            bPause                  = pPause->value() >= 0.5f;
+            if (pClear->value() >= 0.5f)
+                bClear                  = true;
+            bActive                 = pActive->value() >= 0.5f;
 
             // Report latency
             set_latency(nLookahead);
+        }
+
+        void ringmod_sc::ui_activated()
+        {
+            bUISync                 = true;
         }
 
         void ringmod_sc::premix_channels(io_buffers_t * io_buf, size_t samples)
@@ -683,18 +704,35 @@ namespace lsp
                 c->vValues[MG_SC]   = lsp_max(c->vValues[MG_SC], dsp::abs_max(c->vBuffer, samples));
 
                 // Apply gain reduction and mix dry/wet signal
-                dsp::mul2(vBuffer, c->vInData, samples); // vBuffer now contains gain-reduced input signal
-                dsp::mix2(vBuffer, c->vInData, fWet, fDry, samples);
+                if (bOutIn)
+                {
+                    if (bActive)
+                    {
+                        dsp::mul2(vBuffer, c->vInData, samples); // vBuffer now contains gain-reduced input signal
+                        dsp::mix2(vBuffer, c->vInData, fWet, fDry, samples);
+                    }
+                    else
+                        dsp::copy(vBuffer, c->vInData, samples);
+                }
 
                 // Add sidechain signal and process graph for output
                 const float sc_out_gain = (bOutSc) ? fScGain * fOutGain : GAIN_AMP_M_INF_DB;
                 if (sc_out_gain > GAIN_AMP_M_INF_DB)
                 {
-                    c->sScDelay.process(c->vBuffer, io->vMixSc, sc_out_gain, samples);
-                    dsp::add2(vBuffer, c->vBuffer, samples);
+                    if (bOutIn)
+                    {
+                        c->sScDelay.process(c->vBuffer, io->vMixSc, sc_out_gain, samples);
+                        dsp::add2(vBuffer, c->vBuffer, samples);
+                    }
+                    else
+                        c->sScDelay.process(vBuffer, io->vMixSc, sc_out_gain, samples);
                 }
                 else
+                {
                     c->sScDelay.append(io->vMixSc, samples);
+                    if (!bOutIn)
+                        dsp::fill_zero(vBuffer, samples);
+                }
 
                 c->vGraph[MG_OUT].process(vBuffer, samples);
                 c->vValues[MG_OUT]  = lsp_max(c->vValues[MG_OUT], dsp::abs_max(vBuffer, samples));
@@ -717,7 +755,10 @@ namespace lsp
         void ringmod_sc::output_meshes()
         {
             plug::mesh_t *mesh = (pGraphMesh != NULL) ? pGraphMesh->buffer<plug::mesh_t>() : NULL;
-            if ((mesh != NULL) && (mesh->isEmpty()))
+            if ((mesh == NULL) || (!mesh->isEmpty()))
+                return;
+
+            if ((!bPause) || (bClear) || (bUISync))
             {
                 size_t index    = 0;
                 float *v        = mesh->pvData[index++];
@@ -738,9 +779,13 @@ namespace lsp
                     for (size_t j=0; j<MG_TOTAL; ++j)
                     {
                         const float g   = (j == MG_GAIN) ? GAIN_AMP_0_DB : GAIN_AMP_M_INF_DB;
+                        dspu::MeterGraph *mg = & c->vGraph[j];
+
+                        if (bClear)
+                            mg->clear();
 
                         v               = mesh->pvData[index++];
-                        dsp::copy(&v[2], c->vGraph[j].data(), meta::ringmod_sc::TIME_MESH_SIZE);
+                        dsp::copy(&v[2], mg->data(), meta::ringmod_sc::TIME_MESH_SIZE);
 
                         v[0]            = g;
                         v[1]            = v[2];
@@ -752,6 +797,9 @@ namespace lsp
 
                 // Update mesh state
                 mesh->data(index, meta::ringmod_sc::TIME_MESH_SIZE + 4);
+
+                bClear              = false;
+                bUISync             = false;
             }
         }
 

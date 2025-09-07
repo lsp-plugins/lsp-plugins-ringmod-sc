@@ -100,8 +100,10 @@ namespace lsp
             IN_GAIN,
             SC_GAIN,
             OUT_GAIN,
+            SWITCH("out_in", "Output input signal", "Out In", 1),
             SWITCH("out_sc", "Output sidechain signal", "Out SC", 1),
 
+            SWITCH("active", "Sidechain processing active", "Active", 1),
             COMBO("type", "Sidechain type", "Type", 1, ringmod_sc_types),
             CONTROL("hold", "Hold time", "Hold", U_MSEC, ringmod_sc::HOLD),
             LOG_CONTROL("release", "Release time", "Release", U_MSEC, ringmod_sc::RELEASE),
@@ -115,6 +117,8 @@ namespace lsp
             PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),
 
             // Meters
+            SWITCH("pause", "Pause graph analysis", "Pause", 0.0f),
+            TRIGGER("clear", "Clear graph analysis", "Clear"),
             RMOD_METERS("", "", ""),
             MESH("mg", "Meter graphs", 1 + 1*4, ringmod_sc::TIME_MESH_SIZE + 4),
 
@@ -132,8 +136,10 @@ namespace lsp
             IN_GAIN,
             SC_GAIN,
             OUT_GAIN,
+            SWITCH("out_in", "Output input signal", "Out In", 1),
             SWITCH("out_sc", "Output sidechain signal", "Out SC", 1),
 
+            SWITCH("active", "Sidechain processing active", "Active", 1),
             COMBO("type", "Sidechain type", "Type", 1, ringmod_sc_types),
             COMBO("source", "Sidechain source", "Source", 0, ringmod_sc_sources),
             PERCENTS("slink", "Stereo link", "Stereo link", 0.0f, 0.1f),
@@ -149,6 +155,8 @@ namespace lsp
             PERCENTS("drywet", "Dry/Wet balance", "Dry/Wet", 100.0f, 0.1f),
 
             // Meters
+            SWITCH("pause", "Pause graph analysis", "Pause", 0.0f),
+            TRIGGER("clear", "Clear graph analysis", "Clear"),
             RMOD_METERS("_l", " Left", " L"),
             RMOD_METERS("_r", " Right", " R"),
             MESH("mg", "Meter graphs", 1 + 2*4, ringmod_sc::TIME_MESH_SIZE + 4),

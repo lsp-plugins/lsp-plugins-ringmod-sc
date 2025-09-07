@@ -150,13 +150,20 @@ namespace lsp
                 float               fAmount;                // The amount of data to subtract
                 float               fDry;                   // Dry amount of signal
                 float               fWet;                   // Wet amount of signal
+                bool                bOutIn;                 // Output inpug signal
                 bool                bOutSc;                 // Output sidechain value
+                bool                bActive;                // Sidechain processing is active
+                bool                bPause;                 // Pause output graph
+                bool                bClear;                 // Clear output graph
+                bool                bUISync;                // Synchronize mesh with UI
 
                 plug::IPort        *pBypass;                // Bypass
                 plug::IPort        *pGainIn;                // Input gain
                 plug::IPort        *pGainSc;                // Sidechain gain
                 plug::IPort        *pGainOut;               // Output gain
+                plug::IPort        *pOutIn;                 // Output input signal
                 plug::IPort        *pOutSc;                 // Output sidechain
+                plug::IPort        *pActive;                // Sidechain processing is active
                 plug::IPort        *pType;                  // Sidechain type
                 plug::IPort        *pSource;                // Sidechain source
                 plug::IPort        *pStereoLink;            // Stereo linking
@@ -169,6 +176,8 @@ namespace lsp
                 plug::IPort        *pWet;                   // Wet gain
                 plug::IPort        *pDryWet;                // Dry/Wet balance
                 plug::IPort        *pGraphMesh;             // Meter graph mesh
+                plug::IPort        *pPause;                 // Pause graph processing
+                plug::IPort        *pClear;                 // Clear
 
                 uint8_t            *pData;                  // Allocated data
 
@@ -199,6 +208,7 @@ namespace lsp
             public:
                 virtual void        update_sample_rate(long sr) override;
                 virtual void        update_settings() override;
+                virtual void        ui_activated() override;
                 virtual void        process(size_t samples) override;
                 virtual void        dump(dspu::IStateDumper *v) const override;
         };
