@@ -338,20 +338,19 @@ namespace lsp
         void ringmod_sc::update_sample_rate(long sr)
         {
             const size_t samples_per_dot    = dspu::seconds_to_samples(sr, meta::ringmod_sc::TIME_HISTORY_MAX / meta::ringmod_sc::TIME_MESH_SIZE);
-            const size_t in_max_delay = dspu::millis_to_samples(sr, meta::ringmod_sc::LOOKAHEAD_MAX);
+            const size_t in_max_delay = dspu::millis_to_samples(sr, meta::ringmod_sc::LOOKAHEAD_MAX) + BUFFER_SIZE;
             const size_t sc_max_delay =
                 in_max_delay +
-                dspu::millis_to_samples(sr, meta::ringmod_sc::DUCK_MAX) +
-                BUFFER_SIZE;
+                dspu::millis_to_samples(sr, meta::ringmod_sc::DUCK_MAX);
 
             // Update sample rate for the bypass processors
             for (size_t i=0; i<nChannels; ++i)
             {
                 channel_t *c    = &vChannels[i];
                 c->sBypass.init(sr);
-                c->sInDelay.init(in_max_delay + BUFFER_SIZE);
-                c->sScDelay.init(in_max_delay + BUFFER_SIZE);
-                c->sEnvDelay.init(sc_max_delay + BUFFER_SIZE);
+                c->sInDelay.init(in_max_delay);
+                c->sScDelay.init(in_max_delay);
+                c->sEnvDelay.init(sc_max_delay);
 
                 for (size_t j=0; j<MG_TOTAL; ++j)
                 {
