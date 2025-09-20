@@ -27,6 +27,7 @@
 #include <lsp-plug.in/dsp-units/util/MeterGraph.h>
 #include <lsp-plug.in/dsp-units/util/RingBuffer.h>
 #include <lsp-plug.in/plug-fw/plug.h>
+#include <lsp-plug.in/plug-fw/core/IDBuffer.h>
 #include <private/meta/ringmod_sc.h>
 
 namespace lsp
@@ -136,6 +137,7 @@ namespace lsp
                 float              *vEmptyBuffer;           // Empty buffer for audio processing
                 float              *vTime;                  // Mesh time points
                 float              *vBuffer;                // Temporary buffer for audio processing
+                float              *vIDisplay;              // Inline display buffer
                 premix_t            sPremix;                // Sidechain pre-mix
                 uint32_t            nType;                  // Sidechain type
                 uint32_t            nSource;                // Sidechain source
@@ -157,6 +159,8 @@ namespace lsp
                 bool                bPause;                 // Pause output graph
                 bool                bClear;                 // Clear output graph
                 bool                bUISync;                // Synchronize mesh with UI
+
+                core::IDBuffer     *pIDisplay;              // Inline display buffer
 
                 plug::IPort        *pBypass;                // Bypass
                 plug::IPort        *pGainIn;                // Input gain

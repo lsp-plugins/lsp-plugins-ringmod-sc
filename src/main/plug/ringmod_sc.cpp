@@ -66,6 +66,7 @@ namespace lsp
             vEmptyBuffer        = NULL;
             vTime               = NULL;
             vBuffer             = NULL;
+            vIDisplay           = NULL;
 
             sPremix.fInToSc     = GAIN_AMP_M_INF_DB;
             sPremix.fInToLink   = GAIN_AMP_M_INF_DB;
@@ -113,6 +114,8 @@ namespace lsp
             bClear              = false;
             bUISync             = false;
 
+            pIDisplay           = NULL;
+
             pBypass             = NULL;
             pGainIn             = NULL;
             pGainSc             = NULL;
@@ -158,6 +161,7 @@ namespace lsp
                                       buf_sz +  // vEmptyBuffer
                                       buf_sz +  // vBuffer
                                       history_sz + // vTime
+                                      history_sz + // vIDisplay
                                       nChannels * ( // channel_t
                                           buf_sz +  // vIndata
                                           buf_sz    // vBuffer
@@ -174,6 +178,7 @@ namespace lsp
             vEmptyBuffer            = advance_ptr_bytes<float>(ptr, buf_sz);
             vTime                   = advance_ptr_bytes<float>(ptr, history_sz);
             vBuffer                 = advance_ptr_bytes<float>(ptr, buf_sz);
+            vIDisplay               = advance_ptr_bytes<float>(ptr, history_sz);
 
             // Initialize pre-mix
             for (size_t i=0; i<nChannels; ++i)
@@ -335,6 +340,12 @@ namespace lsp
             {
                 free_aligned(pData);
                 pData       = NULL;
+            }
+
+            if (pIDisplay != NULL)
+            {
+                pIDisplay->destroy();
+                pIDisplay = NULL;
             }
         }
 
@@ -877,16 +888,105 @@ namespace lsp
                 v->begin_object(c, sizeof(channel_t));
                 {
                     v->write_object("sBypass", &c->sBypass);
+                    v->write_object("sInDelay", &c->sInDelay);
+                    v->write_object("sScDelay", &c->sScDelay);
+                    v->write_object("sEnvDelay", &c->sEnvDelay);
+                    v->write_object_array("vGraph", c->vGraph, MG_TOTAL);
 
+                    v->write("fPeak", c->fPeak);
+                    v->write("nHold", c->nHold);
+                    v->writev("vVisible", c->vVisible, MG_TOTAL);
+                    v->writev("vValues", c->vValues, MG_TOTAL);
+                    v->write("vInData", c->vInData);
+                    v->write("vBuffer", c->vBuffer);
+
+                    v->write("pIn", c->pIn);
+                    v->write("pOut", c->pOut);
+                    v->write("pScIn", c->pScIn);
+                    v->write("pShmIn", c->pShmIn);
+                    v->writev("vVisibility", c->vVisibility, MG_TOTAL);
+                    v->writev("vMeters", c->vMeters, MG_TOTAL);
                 }
                 v->end_object();
             }
             v->end_array();
 
+
+            v->write("vEmptyBuffer", vEmptyBuffer);
+            v->write("vTime", vTime);
             v->write("vBuffer", vBuffer);
+            v->write("vIDisplay", vIDisplay);
+
+            v->begin_object("sPremix", &sPremix, sizeof(premix_t));
+            {
+                v->write("fInToSc", sPremix.fInToSc);
+                v->write("fInToLink", sPremix.fInToLink);
+                v->write("fLinkToIn", sPremix.fLinkToIn);
+                v->write("fLinkToSc", sPremix.fLinkToSc);
+                v->write("fScToIn", sPremix.fScToIn);
+                v->write("fScToLink", sPremix.fScToLink);
+
+                v->writev("vIn", sPremix.vIn, 2);
+                v->writev("vOut", sPremix.vOut, 2);
+                v->writev("vSc", sPremix.vSc, 2);
+                v->writev("vLink", sPremix.vLink, 2);
+                v->writev("vTmpIn", sPremix.vTmpIn, 2);
+                v->writev("vTmpLink", sPremix.vTmpLink, 2);
+                v->writev("vTmpSc", sPremix.vTmpSc, 2);
+
+                v->write("pInToSc", sPremix.pInToSc);
+                v->write("pInToLink", sPremix.pInToLink);
+                v->write("pLinkToIn", sPremix.pLinkToIn);
+                v->write("pLinkToSc", sPremix.pLinkToSc);
+                v->write("pScToIn", sPremix.pScToIn);
+                v->write("pScToLink", sPremix.pScToLink);
+            }
+
+            v->write("nType", nType);
+            v->write("nSource", nSource);
+            v->write("nLookahead", nLookahead);
+            v->write("nDuck", nDuck);
+            v->write("nHold", nHold);
+            v->write("fTauRelease", fTauRelease);
+            v->write("fStereoLink", fStereoLink);
+            v->write("fInGain", fInGain);
+            v->write("fOutGain", fOutGain);
+            v->write("fScGain", fScGain);
+            v->write("fAmount", fAmount);
+            v->write("fDry", fDry);
+            v->write("fWet", fWet);
+            v->write("bOutIn", bOutIn);
+            v->write("bOutSc", bOutSc);
+            v->write("bActive", bActive);
+            v->write("bInvert", bInvert);
+            v->write("bPause", bPause);
+            v->write("bClear", bClear);
+            v->write("bUISync", bUISync);
+
+            v->write("pIDisplay", pIDisplay);
 
             v->write("pBypass", pBypass);
-
+            v->write("pGainIn", pGainIn);
+            v->write("pGainSc", pGainSc);
+            v->write("pGainOut", pGainOut);
+            v->write("pOutIn", pOutIn);
+            v->write("pOutSc", pOutSc);
+            v->write("pActive", pActive);
+            v->write("pInvert", pInvert);
+            v->write("pType", pType);
+            v->write("pSource", pSource);
+            v->write("pStereoLink", pStereoLink);
+            v->write("pHold", pHold);
+            v->write("pRelease", pRelease);
+            v->write("pLookahead", pLookahead);
+            v->write("pDuck", pDuck);
+            v->write("pAmount", pAmount);
+            v->write("pDry", pDry);
+            v->write("pWet", pWet);
+            v->write("pDryWet", pDryWet);
+            v->write("pGraphMesh", pGraphMesh);
+            v->write("pPause", pPause);
+            v->write("pClear", pClear);
             v->write("pData", pData);
         }
 
