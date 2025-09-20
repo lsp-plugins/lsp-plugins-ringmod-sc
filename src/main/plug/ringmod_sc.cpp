@@ -108,6 +108,7 @@ namespace lsp
             bOutIn              = true;
             bOutSc              = true;
             bActive             = true;
+            bInvert             = false;
             bPause              = false;
             bClear              = false;
             bUISync             = false;
@@ -119,6 +120,7 @@ namespace lsp
             pOutIn              = NULL;
             pOutSc              = NULL;
             pActive             = NULL;
+            pInvert             = NULL;
             pType               = NULL;
             pSource             = NULL;
             pStereoLink         = NULL;
@@ -261,6 +263,7 @@ namespace lsp
             BIND_PORT(pOutIn);
             BIND_PORT(pOutSc);
             BIND_PORT(pActive);
+            BIND_PORT(pInvert);
             BIND_PORT(pType);
             if (nChannels > 1)
             {
@@ -419,6 +422,7 @@ namespace lsp
             if (pClear->value() >= 0.5f)
                 bClear                  = true;
             bActive                 = pActive->value() >= 0.5f;
+            bInvert                 = pInvert->value() >= 0.5f;
 
             // Report latency
             set_latency(nLookahead);
@@ -691,8 +695,14 @@ namespace lsp
                 // Compute the gain reduction
                 // c->vBuffer contains envelope signal
                 // vBuffer should contain gain reduction
-                for (size_t j=0; j<samples; ++j)
-                    vBuffer[j]          = lsp_max(0.0f, GAIN_AMP_0_DB - c->vBuffer[j] * fAmount);
+                if (bInvert)
+                    dsp::mul_k3(vBuffer, c->vBuffer, fAmount, samples);
+                else
+                {
+                    for (size_t j=0; j<samples; ++j)
+                        vBuffer[j]          = lsp_max(0.0f, GAIN_AMP_0_DB - c->vBuffer[j] * fAmount);
+                }
+
                 c->vGraph[MG_GAIN].process(vBuffer, samples);
                 c->vValues[MG_GAIN] = lsp_min(c->vValues[MG_GAIN], dsp::abs_min(vBuffer, samples));
 

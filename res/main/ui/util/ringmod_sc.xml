@@ -108,48 +108,48 @@
 				<!-- Sidechain signal meter mono-->
 				<ui:if test="!ex :in_r">
 					<ledmeter vexpand="true" height.min="256" angle="1">
-						<ledchannel id="slm" min="-48 db" max="0 db" log="true" type="peak" activity=":slv" value.color="sidechain_1"/>
+						<ledchannel id="slm" min="-48 db" max="12 db" log="true" type="peak" activity=":slv" value.color="sidechain_1"/>
 					</ledmeter>
 	
 					<!-- Gain signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
-						<ledchannel id="grm" min="-48 db" max="0 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv" value.color="blue"/>
+						<ledchannel id="grm" min="-48 db" max="12 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv" value.color="blue"/>
 					</ledmeter>
 	
 					<!-- Input signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
-						<ledchannel id="ilm" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv" value.color="left_in"/>
+						<ledchannel id="ilm" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv" value.color="left_in"/>
 					</ledmeter>
 	
 					<!-- Output signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
-						<ledchannel id="olm" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv" value.color="left"/>
+						<ledchannel id="olm" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv" value.color="left"/>
 					</ledmeter>
 				</ui:if>
 
 				<!-- Sidechain signal meter stereo -->
 				<ui:if test="ex :in_r">
 					<ledmeter vexpand="true" height.min="256" angle="1">
-						<ledchannel id="slm_l" min="-48 db" max="0 db" log="true" type="peak" activity=":slv_l" value.color="sidechain_1"/>
-						<ledchannel id="slm_r" min="-48 db" max="0 db" log="true" type="peak" activity=":slv_r" value.color="sidechain_2"/>
+						<ledchannel id="slm_l" min="-48 db" max="12 db" log="true" type="peak" activity=":slv_l" value.color="sidechain_1"/>
+						<ledchannel id="slm_r" min="-48 db" max="12 db" log="true" type="peak" activity=":slv_r" value.color="sidechain_2"/>
 					</ledmeter>
 	
 					<!-- Gain signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
-						<ledchannel id="grm_l" min="-48 db" max="0 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv_l" value.color="blue"/>
-						<ledchannel id="grm_r" min="-48 db" max="0 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv_r" value.color="blue"/>
+						<ledchannel id="grm_l" min="-48 db" max="12 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv_l" value.color="blue"/>
+						<ledchannel id="grm_r" min="-48 db" max="12 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv_r" value.color="blue"/>
 					</ledmeter>
 	
 					<!-- Input signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
-						<ledchannel id="ilm_l" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv_l" value.color="left_in"/>
-						<ledchannel id="ilm_r" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv_r" value.color="right_in"/>
+						<ledchannel id="ilm_l" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv_l" value.color="left_in"/>
+						<ledchannel id="ilm_r" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv_r" value.color="right_in"/>
 					</ledmeter>
 	
 					<!-- Output signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
-						<ledchannel id="olm_l" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv_l" value.color="left"/>
-						<ledchannel id="olm_r" min="-48 db" max="0 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv_r" value.color="right"/>
+						<ledchannel id="olm_l" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv_l" value.color="left"/>
+						<ledchannel id="olm_r" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv_r" value.color="right"/>
 					</ledmeter>
 				</ui:if>
 			</grid>
@@ -165,6 +165,7 @@
 					<vsep pad.h="2" bg.color="bg" reduce="true"/>
 					
 					<button id="active" height="22" width="48" text="labels.active" pad.v="4" ui:inject="Button_green"/>
+					<button id="invert" height="22" width="48" text="labels.invert" pad.v="4" ui:inject="Button_yellow"/>
 					
 					<label text="labels.sc.type"/>
 					<combo id="type" pad.r="12" pad.v="4"/>

@@ -153,6 +153,7 @@ namespace lsp
                 bool                bOutIn;                 // Output inpug signal
                 bool                bOutSc;                 // Output sidechain value
                 bool                bActive;                // Sidechain processing is active
+                bool                bInvert;                // Invert sidechain processing
                 bool                bPause;                 // Pause output graph
                 bool                bClear;                 // Clear output graph
                 bool                bUISync;                // Synchronize mesh with UI
@@ -164,6 +165,7 @@ namespace lsp
                 plug::IPort        *pOutIn;                 // Output input signal
                 plug::IPort        *pOutSc;                 // Output sidechain
                 plug::IPort        *pActive;                // Sidechain processing is active
+                plug::IPort        *pInvert;                // Invert sidechain processing
                 plug::IPort        *pType;                  // Sidechain type
                 plug::IPort        *pSource;                // Sidechain source
                 plug::IPort        *pStereoLink;            // Stereo linking

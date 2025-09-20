@@ -104,6 +104,7 @@ namespace lsp
             SWITCH("out_sc", "Output sidechain signal", "Out SC", 1),
 
             SWITCH("active", "Sidechain processing active", "Active", 1),
+            SWITCH("invert", "Invert sidechain processing", "Invert", 0),
             COMBO("type", "Sidechain type", "Type", 1, ringmod_sc_types),
             CONTROL("hold", "Hold time", "Hold", U_MSEC, ringmod_sc::HOLD),
             LOG_CONTROL("release", "Release time", "Release", U_MSEC, ringmod_sc::RELEASE),
@@ -140,6 +141,7 @@ namespace lsp
             SWITCH("out_sc", "Output sidechain signal", "Out SC", 1),
 
             SWITCH("active", "Sidechain processing active", "Active", 1),
+            SWITCH("invert", "Invert sidechain processing", "Invert", 0),
             COMBO("type", "Sidechain type", "Type", 1, ringmod_sc_types),
             COMBO("source", "Sidechain source", "Source", 0, ringmod_sc_sources),
             PERCENTS("slink", "Stereo link", "Stereo link", 0.0f, 0.1f),
