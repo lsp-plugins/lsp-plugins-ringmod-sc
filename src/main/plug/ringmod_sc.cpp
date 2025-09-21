@@ -26,6 +26,7 @@
 #include <lsp-plug.in/plug-fw/core/AudioBuffer.h>
 #include <lsp-plug.in/plug-fw/meta/func.h>
 #include <lsp-plug.in/shared/debug.h>
+#include <lsp-plug.in/shared/id_colors.h>
 
 #include <private/plugins/ringmod_sc.h>
 
@@ -872,6 +873,109 @@ namespace lsp
             // Output meters and meshes
             output_meters();
             output_meshes();
+
+            // Request for redraw
+            if (pWrapper != NULL)
+                pWrapper->query_display_draw();
+        }
+
+        bool ringmod_sc::inline_display(plug::ICanvas *cv, size_t width, size_t height)
+        {
+            constexpr float y_min   = GAIN_AMP_M_48_DB;
+            constexpr float y_max   = GAIN_AMP_P_12_DB;
+            constexpr float y_zero  = GAIN_AMP_0_DB;
+            constexpr float y_step  = GAIN_AMP_P_12_DB;
+            constexpr float x_min   = meta::ringmod_sc::TIME_HISTORY_MAX;
+            constexpr float x_max   = 0.0f;
+            constexpr float x_zero  = 0.0f;
+            constexpr float x_step  = 1.0f;
+
+            // Check proportions
+            if (height > (M_RGOLD_RATIO * width))
+                height  = M_RGOLD_RATIO * width;
+
+            // Init canvas
+            if (!cv->init(width, height))
+                return false;
+            width   = cv->width();
+            height  = cv->height();
+
+            // Clear background
+            bool bypassing = vChannels[0].sBypass.bypassing();
+            cv->set_color_rgb((bypassing) ? CV_DISABLED : CV_BACKGROUND);
+            cv->paint();
+
+            // Calc axis params
+            const float zy    = y_zero / y_min;
+            const float dx    = float(width/(x_max - x_min));
+            const float dy    = float(height)/(logf(y_min/y_max));
+
+            // Draw axis
+            cv->set_line_width(1.0);
+
+            // Draw vertical lines
+            cv->set_color_rgb(CV_YELLOW, 0.5f);
+            for (float i=x_zero + x_step; i < x_min; i += x_step)
+            {
+                const float ax      = width + dx*i;
+                cv->line(ax, 0, ax, height);
+            }
+
+            // Draw horizontal lines
+            cv->set_color_rgb(CV_WHITE, 0.5f);
+            for (float i=y_min * y_step; i<y_max; i *= y_step)
+            {
+                const float ay      = height + dy*(logf(i*zy));
+                cv->line(0, ay, width, ay);
+            }
+
+            // Allocate buffer: t, f(t), x, y
+            pIDisplay           = core::IDBuffer::reuse(pIDisplay, 4, width);
+            core::IDBuffer *b   = pIDisplay;
+            if (b == NULL)
+                return false;
+
+            static uint32_t c_colors[] = {
+                    CV_MIDDLE_CHANNEL_IN, CV_MIDDLE_CHANNEL, CV_BRIGHT_GREEN, CV_BRIGHT_BLUE,
+                    CV_LEFT_CHANNEL_IN, CV_LEFT_CHANNEL, CV_BRIGHT_GREEN, CV_BRIGHT_BLUE,
+                    CV_RIGHT_CHANNEL_IN, CV_RIGHT_CHANNEL, CV_BRIGHT_GREEN, CV_BRIGHT_BLUE
+                   };
+            uint32_t *cols      = (nChannels > 1) ? &c_colors[MG_TOTAL] : c_colors;
+            float r             = meta::ringmod_sc::TIME_MESH_SIZE/float(width);
+
+            for (size_t j=0; j<width; ++j)
+            {
+                size_t k        = r*j;
+                b->v[0][j]      = vTime[k];
+            }
+
+            cv->set_line_width(2.0f);
+            for (size_t j=0; j<MG_TOTAL; ++j)
+            {
+                for (size_t i=0; i<nChannels; ++i)
+                {
+                    channel_t *c    = &vChannels[i];
+                    if (!c->vVisible[j])
+                        continue;
+
+                    // Initialize values
+                    c->vGraph[j].read(vIDisplay, meta::ringmod_sc::TIME_MESH_SIZE);
+                    for (size_t k=0; k<width; ++k)
+                        b->v[1][k]      = vIDisplay[size_t(r*k)];
+
+                    // Initialize coords
+                    dsp::fill(b->v[2], width, width);
+                    dsp::fill(b->v[3], height, width);
+                    dsp::fmadd_k3(b->v[2], b->v[0], dx, width);
+                    dsp::axis_apply_log1(b->v[3], b->v[1], zy, dy, width);
+
+                    // Draw channel
+                    cv->set_color_rgb((bypassing) ? CV_SILVER : cols[j + i*MG_TOTAL]);
+                    cv->draw_lines(b->v[2], b->v[3], width);
+                }
+            }
+
+            return true;
         }
 
         void ringmod_sc::dump(dspu::IStateDumper *v) const
