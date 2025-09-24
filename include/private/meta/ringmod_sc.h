@@ -36,22 +36,22 @@ namespace lsp
             static constexpr float  HOLD_MIN            = 0.0f;
             static constexpr float  HOLD_MAX            = 10.0f;
             static constexpr float  HOLD_DFL            = 0.0f;
-            static constexpr float  HOLD_STEP           = 0.005f;
+            static constexpr float  HOLD_STEP           = 0.0035f;
 
             static constexpr float  RELEASE_MIN         = 0.0f;
             static constexpr float  RELEASE_MAX         = 100.0f;
             static constexpr float  RELEASE_DFL         = 0.0f;
-            static constexpr float  RELEASE_STEP        = 0.01f;
+            static constexpr float  RELEASE_STEP        = 0.004f;
 
             static constexpr float  LOOKAHEAD_MIN       = 0.0f;
             static constexpr float  LOOKAHEAD_MAX       = 10.0f;
             static constexpr float  LOOKAHEAD_DFL       = 0.0f;
-            static constexpr float  LOOKAHEAD_STEP      = 0.005f;
+            static constexpr float  LOOKAHEAD_STEP      = 0.0035f;
 
             static constexpr float  DUCK_MIN            = 0.0f;
             static constexpr float  DUCK_MAX            = 10.0f;
             static constexpr float  DUCK_DFL            = 0.0f;
-            static constexpr float  DUCK_STEP           = 0.005f;
+            static constexpr float  DUCK_STEP           = 0.0035f;
 
             static constexpr float  AMOUNT_MIN          = -12.0f;
             static constexpr float  AMOUNT_MAX          = 24.0f;

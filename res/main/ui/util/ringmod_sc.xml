@@ -36,7 +36,7 @@
 							<mesh yi="2" width="2" color="sidechain_1" visibility=":slv"/>
 							<mesh yi="3" width="2" color="bright_blue" visibility=":grv" fcolor="bright_blue" fcolor.a="0.8" fill="true"/>
 						</ui:if>
-						
+
 						<!-- Stereo -->
 						<ui:if test="ex :in_r">
 							<mesh yi="1" width="0" color="left_in" fcolor="left_in" fcolor.a="0.8" fill="true" visibility=":ilv_l"/>
@@ -49,7 +49,7 @@
 							<mesh yi="7" width="2" color="bright_blue" visibility=":grv_r" fcolor="bright_blue" fcolor.a="0.8" fill="true"/>
 						</ui:if>
 					</ui:with>
-					
+
 					<!-- Text -->
 					<ui:attributes x="5" halign="1" valign="-1">
 						<text y="12 db" text="graph.values.x:db" text:value="12"/>
@@ -87,40 +87,40 @@
 							<button id="slv_l" size="10" ui:inject="Button_orange" led="true"/>
 							<button id="slv_r" size="10" ui:inject="Button_orange" led="true"/>
 						</hbox>
-	
+
 						<hbox spacing="2">
 							<button id="grv_l" size="10" ui:inject="Button_blue" led="true"/>
 							<button id="grv_r" size="10" ui:inject="Button_blue" led="true"/>
 						</hbox>
-	
+
 						<hbox spacing="2">
 							<button id="ilv_l" size="10" ui:inject="Button_left" led="true"/>
 							<button id="ilv_r" size="10" ui:inject="Button_right" led="true"/>
 						</hbox>
-	
+
 						<hbox spacing="2">
 							<button id="olv_l" size="10" ui:inject="Button_left" led="true"/>
 							<button id="olv_r" size="10" ui:inject="Button_right" led="true"/>
 						</hbox>
 					</ui:if>
 				</ui:with>
-				
+
 				<!-- Sidechain signal meter mono-->
 				<ui:if test="!ex :in_r">
 					<ledmeter vexpand="true" height.min="256" angle="1">
 						<ledchannel id="slm" min="-48 db" max="12 db" log="true" type="peak" activity=":slv" value.color="sidechain_1"/>
 					</ledmeter>
-	
+
 					<!-- Gain signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
 						<ledchannel id="grm" min="-48 db" max="12 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv" value.color="blue"/>
 					</ledmeter>
-	
+
 					<!-- Input signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
 						<ledchannel id="ilm" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv" value.color="left_in"/>
 					</ledmeter>
-	
+
 					<!-- Output signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
 						<ledchannel id="olm" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv" value.color="left"/>
@@ -133,19 +133,19 @@
 						<ledchannel id="slm_l" min="-48 db" max="12 db" log="true" type="peak" activity=":slv_l" value.color="sidechain_1"/>
 						<ledchannel id="slm_r" min="-48 db" max="12 db" log="true" type="peak" activity=":slv_r" value.color="sidechain_2"/>
 					</ledmeter>
-	
+
 					<!-- Gain signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
 						<ledchannel id="grm_l" min="-48 db" max="12 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv_l" value.color="blue"/>
 						<ledchannel id="grm_r" min="-48 db" max="12 db" log="true" type="peak" balance="0 db" balance.visibility="true" activity=":grv_r" value.color="blue"/>
 					</ledmeter>
-	
+
 					<!-- Input signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
 						<ledchannel id="ilm_l" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv_l" value.color="left_in"/>
 						<ledchannel id="ilm_r" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":ilv_r" value.color="right_in"/>
 					</ledmeter>
-	
+
 					<!-- Output signal meter -->
 					<ledmeter vexpand="true" height.min="256" angle="1">
 						<ledchannel id="olm_l" min="-48 db" max="12 db" log="true" type="rms_peak" peak.visibility="true" activity=":olv_l" value.color="left"/>
@@ -161,13 +161,13 @@
 				<hbox spacing="4" bg.color="bg_schema" pad.h="6" >
 					<button id="pause" height="22" width="48" text="labels.pause" pad.v="4" ui:inject="Button_green"/>
 					<button id="clear" height="22" width="48" text="labels.clear" pad.v="4" ui:inject="Button_red"/>
-					
+
 					<vsep pad.h="2" bg.color="bg" reduce="true"/>
-					
+
 					<button id="active" height="22" width="48" text="labels.active" pad.v="4" ui:inject="Button_green"/>
 					<button id="invert" height="22" width="48" text="labels.invert" pad.v="4" ui:inject="Button_yellow"/>
-					
-					<label text="labels.sc.type"/>
+
+					<label text="labels.sc.type" pad.l="12"/>
 					<combo id="type" pad.r="12" pad.v="4"/>
 					<ui:if test="ex :in_r">
 						<label text="labels.sc.source"/>
@@ -178,7 +178,7 @@
 
 					<button ui:id="premix_trigger" id="showpmx" text="labels.premix" size="22" />
 					<button ui:id="mix_trigger" id="showmx" text="labels.mix" size="22" pad.v="4"/>
-					
+
 					<!-- button id="pause" height="22" width="48" text="labels.pause" ui:inject="Button_green"/>
 					<button id="clear" height="22" width="48" text="labels.clear" ui:inject="Button_red" pad.r="2"/-->
 
@@ -207,23 +207,23 @@
 					<label text="labels.release" pad.h="6" pad.t="6" fill="false" hexpand="true" vreduce="true"/>
 					<cell rows="3" hreduce="true" pad.h="2"><vsep/></cell>
 					<label text="labels.amount" pad.h="6" pad.t="6" fill="false" hexpand="true" vreduce="true"/>
-					
+
 					<ui:if test="ex :in_r" >
 						<cell rows="3" hreduce="true" pad.h="2"><vsep/></cell>
 						<label text="labels.stereo_link" pad.h="6" pad.t="4" fill="false" hexpand="true" vreduce="true"/>
 					</ui:if>
-					
+
 					<!-- row 2 -->
 					<knob id="lk" pad.t="5" pad.b="4" pad.h="6"/>
 					<knob id="duck" pad.t="5" pad.b="4" pad.h="6"/>
 					<knob id="hold" pad.t="5" pad.b="4" pad.h="6"/>
 					<knob id="release" pad.t="5" pad.b="4" pad.h="6"/>
 					<knob id="amount" pad.t="5" pad.b="4" pad.h="6"/>
-					
+
 					<ui:if test="ex :in_r" >
 						<knob id="slink" scolor="balance"/>
 					</ui:if>
-					
+
 					<!-- row 3 -->
 					<value id="lk" pad.b="6" pad.h="6"/>
 					<value id="duck" pad.b="6" pad.h="6"/>
@@ -245,19 +245,19 @@
 						<label text="labels.output"/>
 					</ui:with>
 					<ui:with pad.t="5" pad.b="4">
-						<knob id="g_in"/>
+						<knob id="g_in" activity=":out_in" inactive.bg.bright="1.0"/>
 						<knob id="g_sc"/>
 						<knob id="g_out"/>
 					</ui:with>
 
-					<value id="g_in"/>
+					<value id="g_in" activity=":out_in" inactive.bg.bright="1.0"/>
 					<value id="g_sc"/>
 					<value id="g_out"/>
 				</grid>
 			</group>
 		</hbox>
 	</vbox>
-	
+
 	<!-- Premix overlay -->
 	<overlay id="showpmx" trigger="premix_trigger" hpos="1" vpos="1" halign="-1" valign="1" ipadding.t="4">
 		<group text="groups.premix" vexpand="false" ipadding="0">
@@ -265,34 +265,34 @@
 				<label text="labels.premix.in_to_sc" pad.h="6" pad.v="4" />
 				<knob id="in2sc" />
 				<value id="in2sc" pad.h="6" pad.v="4" />
-				
+
 				<label text="labels.premix.in_to_link" pad.h="6" pad.v="4" />
 				<knob id="in2lk" />
 				<value id="in2lk" />
-				
+
 				<cell rows="3"><vsep pad.h="2" bg.color="bg" reduce="true" /></cell>
-				
+
 				<label text="labels.premix.sc_to_in" pad.h="6" pad.v="4" />
 				<knob id="sc2in" />
 				<value id="sc2in" pad.h="6" pad.v="4" />
-				
+
 				<label text="labels.premix.sc_to_link" pad.h="6" pad.v="4" />
 				<knob id="sc2lk" />
 				<value id="sc2lk" pad.h="6" pad.v="4" />
-				
+
 				<cell rows="3"><vsep pad.h="2" bg.color="bg" reduce="true" /></cell>
-				
+
 				<label text="labels.premix.link_to_in" pad.h="6" pad.v="4" />
 				<knob id="lk2in" />
 				<value id="lk2in" pad.h="6" pad.v="4" />
-				
+
 				<label text="labels.premix.link_to_sc" pad.h="6" pad.v="4" />
 				<knob id="lk2sc" />
 				<value id="lk2sc" pad.h="6" pad.v="4" />
 			</grid>
 		</group>
 	</overlay>
-	
+
 	<!-- Mix overlay -->
 	<overlay id="showmx" trigger="mix_trigger" hpos="1" vpos="1" halign="-1" valign="1" ipadding.t="4">
 		<group text="groups.mix" vexpand="false" ipadding="0">
