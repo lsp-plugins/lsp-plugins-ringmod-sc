@@ -175,7 +175,7 @@ namespace lsp
             "ringmod_sc",
             "Ring Modulated Sidechain",
             B_UTILITIES,
-            "", // TODO: provide ID of the video on YouTube
+            "q5XMbkfR_5s",
             "This plugin allows to apply a specific sidechaining technique based on ring modulation and subtraction of the original signal."
         };
 
