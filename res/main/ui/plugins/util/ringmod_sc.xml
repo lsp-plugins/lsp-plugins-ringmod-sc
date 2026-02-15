@@ -84,11 +84,11 @@
 					<!-- Stereo -->
 					<ui:if test="ex :in_r">
 						<hbox spacing="2">
-							<button id="slv_l" size="10" ui:inject="Button_orange" led="true"/>
-							<button id="slv_r" size="10" ui:inject="Button_orange" led="true"/>
+							<button id="slv_l" size="10" ui:inject="Button_orange" led="true" />
+							<button id="slv_r" size="10" ui:inject="Button_orange" led="true" />
 						</hbox>
 
-						<hbox spacing="2">
+						<hbox spacing="2" fill="false">
 							<button id="grv_l" size="10" ui:inject="Button_blue" led="true"/>
 							<button id="grv_r" size="10" ui:inject="Button_blue" led="true"/>
 						</hbox>
