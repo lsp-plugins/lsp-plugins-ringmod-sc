@@ -207,7 +207,8 @@ namespace lsp
             "plugins/util/ringmod_sc.xml",
             NULL,
             mono_plugin_sidechain_port_groups,
-            &ringmod_sc_bundle
+            &ringmod_sc_bundle,
+            2
         };
         LSP_REGISTER_METADATA(ringmod_sc_mono);
 
@@ -238,12 +239,10 @@ namespace lsp
             "plugins/util/ringmod_sc.xml",
             NULL,
             stereo_plugin_sidechain_port_groups,
-            &ringmod_sc_bundle
+            &ringmod_sc_bundle,
+            1
         };
         LSP_REGISTER_METADATA(ringmod_sc_stereo);
 
     } /* namespace meta */
 } /* namespace lsp */
-
-
-
