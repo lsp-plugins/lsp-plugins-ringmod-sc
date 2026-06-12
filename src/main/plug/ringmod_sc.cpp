@@ -395,7 +395,7 @@ namespace lsp
 
             // Update sidechain processing
             nType                   = pType->value();
-            nSource                 = (pSource != NULL) ? pSource->value() : SC_SRC_LEFT_RIGHT;
+            nSource                 = (pSource != NULL) ? uint32_t(pSource->value()) : uint32_t(SC_SRC_LEFT_RIGHT);
             fStereoLink             = (pStereoLink != NULL) ? lsp_max(pStereoLink->value() * 0.01f, 0.0f) : 0.0f;
             nHold                   = dspu::millis_to_samples(fSampleRate, pHold->value());
             const float release     = pRelease->value();
